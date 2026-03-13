@@ -1,816 +1,309 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Galeria</title>
-<style>
-/* ═══════════ RESET ═══════════ */
-*{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{
-    background:#434343;
-    color:#fff;
-    font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
-    min-height:100vh;
-}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galeria</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-/* ═══════════ WELCOME SCREEN ═══════════ */
-#message{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    flex-direction:column;
-    min-height:100vh;
-    text-align:center;
-    padding:40px 20px;
-    background:#2a2a30;
-    position:relative;
-    overflow:hidden;
-}
-.glow{
-    position:absolute;
-    width:500px;height:500px;
-    border-radius:50%;
-    background:radial-gradient(circle,rgba(79,195,247,.08) 0%,transparent 70%);
-    animation:pulseGlow 4s ease-in-out infinite;
-    pointer-events:none;
-}
-.glow:nth-child(2){
-    width:350px;height:350px;
-    animation-delay:-2s;
-    background:radial-gradient(circle,rgba(160,120,255,.06) 0%,transparent 70%);
-}
-@keyframes pulseGlow{
-    0%,100%{transform:scale(.8);opacity:.3}
-    50%{transform:scale(1.6);opacity:1}
-}
-#message h2{
-    font-size:2.5em;
-    margin-bottom:24px;
-    position:relative;z-index:1;
-    animation:fadeUp .8s ease both;
-}
-#message p{
-    color:#888;
-    font-size:1.05em;
-    margin-bottom:14px;
-    position:relative;z-index:1;
-    animation:fadeUp .8s ease both;
-    animation-delay:.15s;
-}
-#message code{
-    display:inline-block;
-    background:#16162a;
-    padding:14px 24px;
-    border-radius:10px;
-    color:#4fc3f7;
-    font-size:.92em;
-    word-break:break-all;
-    position:relative;z-index:1;
-    animation:fadeUp .8s ease both;
-    animation-delay:.3s;
-    border:1px solid rgba(79,195,247,.15);
-}
-@keyframes fadeUp{
-    from{opacity:0;transform:translateY(20px)}
-    to{opacity:1;transform:translateY(0)}
-}
+        body {
+            background: #0a0a0a;
+            color: #fff;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            min-height: 100vh;
+        }
 
-/* ═══════════ GALLERY COLUMNS ═══════════ */
-#gallery{
-    display:flex;
-    width:100%;
-    min-height:100vh;
-}
-.column{
-    flex:1;
-    display:flex;
-    flex-direction:column;
-    min-width:0;
-}
-.column+.column{
-    border-left:1px solid rgba(255,255,255,.04);
-}
-.column-header{
-    text-align:center;
-    padding:16px 10px;
-    font-size:.82em;
-    font-weight:700;
-    text-transform:uppercase;
-    letter-spacing:2.5px;
-    background:rgba(0,0,0,.22);
-    border-bottom:2px solid rgba(255,255,255,.04);
-    position:sticky;
-    top:0;z-index:10;
-    backdrop-filter:blur(14px);
-    -webkit-backdrop-filter:blur(14px);
-    color:rgba(255,255,255,.7);
-}
+        /* ---------- ekran powitalny ---------- */
+        #message {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            min-height: 100vh;
+            text-align: center;
+            padding: 20px;
+            color: #888;
+        }
+        #message h2 {
+            font-size: 2.4em;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+        #message p {
+            font-size: 1.1em;
+            margin-bottom: 12px;
+        }
+        #message code {
+            background: #161628;
+            padding: 12px 22px;
+            border-radius: 8px;
+            color: #4fc3f7;
+            font-size: 1em;
+            word-break: break-all;
+        }
 
-/* ── Image wrapper ── */
-.col-img-wrap{
-    margin:8px 10px;
-    overflow:hidden;
-    /*border-radius:8px;*/
-    box-shadow: 3px 0px 10px 0px rgba(40, 40, 40, 0.8);
-    transition:box-shadow .35s ease,transform .35s cubic-bezier(.25,.46,.45,.94);
-    cursor:pointer;
-    position:relative;
-}
-.col-img-wrap:hover{
-    box-shadow:
-        0 8px 30px rgba(0,0,0,.45),
-        0 14px 50px rgba(0,0,0,.25);
-    transform:scale(1.025);
-    z-index:5;
-}
-.col-img-wrap img{
-    width:100%;
-    display:block;
-    transition:transform .4s cubic-bezier(.25,.46,.45,.94);
-    opacity:0;
-}
-.col-img-wrap img.loaded{
-    opacity:1;
-    transition:
-        opacity .5s ease,
-        transform .4s cubic-bezier(.25,.46,.45,.94);
-}
-.col-img-wrap:hover img{
-    transform:scale(1.07);
-}
+        /* ---------- galeria – kolumny ---------- */
+        #gallery {
+            display: flex;
+            width: 100%;
+        }
 
-/* ── Status / spinner ── */
-.status{
-    text-align:center;
-    padding:50px 15px;
-    font-size:.88em;
-    color:rgba(255,255,255,.25);
-}
-.status.error{color:#e74c3c}
-.spinner{
-    margin:60px auto;
-    width:30px;height:30px;
-    border:3px solid rgba(255,255,255,.08);
-    border-top-color:#4fc3f7;
-    border-radius:50%;
-    animation:spin .7s linear infinite;
-}
-@keyframes spin{to{transform:rotate(360deg)}}
+        .column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            border-right: 1px solid #1a1a1a;
+        }
+        .column:last-child {
+            border-right: none;
+        }
 
-/* ═══════════ LIGHTBOX ═══════════ */
-#lightbox{
-    position:fixed;inset:0;
-    z-index:1000;
-    display:none;
-    flex-direction:column;
-    background:rgba(10,10,14,.97);
-    backdrop-filter:blur(40px);
-    -webkit-backdrop-filter:blur(40px);
-}
-#lightbox.open{display:flex}
+        .column-header {
+            text-align: center;
+            padding: 14px 8px;
+            font-size: .9em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            background: #111;
+            border-bottom: 2px solid #222;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
 
-.lb-header{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:14px 22px;
-    flex-shrink:0;
-    border-bottom:1px solid rgba(255,255,255,.05);
-}
-.lb-folder{
-    font-size:.85em;
-    font-weight:700;
-    text-transform:uppercase;
-    letter-spacing:2.5px;
-    color:rgba(255,255,255,.45);
-}
-.lb-close{
-    background:none;border:none;
-    color:rgba(255,255,255,.4);
-    font-size:2.2em;
-    cursor:pointer;
-    padding:0 6px;
-    line-height:1;
-    transition:color .2s,transform .2s;
-    border-radius:4px;
-}
-.lb-close:hover{color:#fff;transform:scale(1.15)}
+        .column img {
+            width: 100%;
+            display: block;
+            opacity: 0;
+            transition: opacity .35s ease;
+            cursor: zoom-in;
+        }
+        .column img.loaded {
+            opacity: 1;
+        }
 
-.lb-body{
-    flex:1;
-    display:flex;
-    align-items:stretch;
-    overflow:hidden;
-    position:relative;
-}
-.lb-nav{
-    width:64px;
-    flex-shrink:0;
-    background:none;border:none;
-    color:rgba(255,255,255,.25);
-    font-size:2.8em;
-    cursor:pointer;
-    transition:color .2s,background .2s;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    user-select:none;
-    -webkit-user-select:none;
-}
-.lb-nav:hover{
-    color:rgba(255,255,255,.7);
-    background:rgba(255,255,255,.03);
-}
-.lb-nav.disabled{
-    opacity:.08;
-    cursor:default;
-    pointer-events:none;
-}
-.lb-stage{
-    flex:1;
-    position:relative;
-    overflow:hidden;
-    touch-action:none;
-    user-select:none;
-    -webkit-user-select:none;
-}
-.lb-img{
-    position:absolute;
-    inset:0;
-    width:100%;height:100%;
-    object-fit:contain;
-    will-change:transform,opacity;
-    pointer-events:none;
-    opacity:0;
-}
-.lb-loader{
-    position:absolute;inset:0;
-    display:none;
-    align-items:center;
-    justify-content:center;
-    z-index:2;
-}
-.lb-loader.show{display:flex}
-.lb-loader .spinner{
-    margin:0;
-    width:28px;height:28px;
-    border-width:2px;
-}
+        .status {
+            text-align: center;
+            padding: 50px 10px;
+            font-size: .9em;
+            color: #444;
+        }
+        .status.error {
+            color: #e74c3c;
+        }
 
-.lb-footer{
-    flex-shrink:0;
-    padding:10px 22px 18px;
-    text-align:center;
-    border-top:1px solid rgba(255,255,255,.05);
-}
-.lb-counter{
-    font-size:.88em;
-    color:rgba(255,255,255,.4);
-    margin-bottom:4px;
-    overflow:hidden;
-    height:1.4em;
-    font-variant-numeric:tabular-nums;
-}
-.lb-counter-inner{
-    display:inline-block;
-    transition:transform 80ms ease,opacity 80ms ease;
-}
-.lb-desc{
-    font-size:.84em;
-    color:rgba(255,255,255,.35);
-    max-width:650px;
-    margin:0 auto;
-    line-height:1.6;
-    transition:opacity 150ms ease;
-    min-height:1.4em;
-}
+        /* ---------- lightbox ---------- */
+        #lightbox {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .95);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            cursor: zoom-out;
+        }
+        #lightbox.open {
+            display: flex;
+        }
+        #lightbox img {
+            max-width: 95vw;
+            max-height: 95vh;
+            object-fit: contain;
+            border-radius: 4px;
+        }
 
-/* ═══════════ MOBILE ═══════════ */
-@media(max-width:700px){
-    .lb-nav{width:44px;font-size:2em}
-    .lb-header{padding:10px 14px}
-    .lb-footer{padding:8px 14px 14px}
-    .column-header{padding:12px 6px;font-size:.72em;letter-spacing:1.5px}
-    .col-img-wrap{margin:5px 6px}
-    #message h2{font-size:1.8em}
-}
-@media(max-width:400px){
-    .lb-nav{width:32px;font-size:1.6em}
-}
-</style>
+        /* ---------- loader spinner ---------- */
+        .spinner {
+            margin: 60px auto;
+            width: 36px;
+            height: 36px;
+            border: 3px solid #222;
+            border-top-color: #4fc3f7;
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
 </head>
 <body>
 
-<!-- ═══════════ WELCOME SCREEN ═══════════ -->
 <div id="message"></div>
-
-<!-- ═══════════ GALLERY ═══════════ -->
 <div id="gallery"></div>
 
-<!-- ═══════════ LIGHTBOX ═══════════ -->
-<div id="lightbox">
-    <div class="lb-header">
-        <span class="lb-folder"></span>
-        <button class="lb-close" onclick="closeLightbox()" title="Zamknij (Esc)">&times;</button>
-    </div>
-    <div class="lb-body">
-        <button class="lb-nav lb-nav-prev" onclick="navigateLB(-1)">&#8249;</button>
-        <div class="lb-stage" id="lb-stage">
-            <img class="lb-img lb-img-a" alt="">
-            <img class="lb-img lb-img-b" alt="">
-            <div class="lb-loader"><div class="spinner"></div></div>
-        </div>
-        <button class="lb-nav lb-nav-next" onclick="navigateLB(1)">&#8250;</button>
-    </div>
-    <div class="lb-footer">
-        <div class="lb-counter"><span class="lb-counter-inner"></span></div>
-        <div class="lb-desc"></div>
-    </div>
+<div id="lightbox" onclick="this.classList.remove('open')">
+    <img src="" alt="">
 </div>
 
 <script>
-// ════════════════════════════════════════════════════════════
-//    K O N F I G U R A C J A
-// ════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════
+//               K O N F I G U R A C J A
+// ═══════════════════════════════════════════════
 const CONFIG = {
-    mode: 'local',
-    //mode: 'github',
-    localBase:   '.',
-    githubUser:  'mickurepo',
-    githubRepo:  'gallery',
-    branch:      'dev',
-    basePath:    'image',
+    githubUser : 'mickurepo',   // ← username GitHub
+    githubRepo : 'gallery',      // ← nazwa repozytorium
+    branch     : 'dev',           // ← branch (main / master)
+    basePath   : 'image'                // ← prefix folderu, np. 'images'
+                                   //   (puste = foldery w rootcie repo)
 };
-// ════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════
 
 const IMG_EXT = new Set([
-    'jpg','jpeg','png','gif','webp','bmp','svg','avif','tiff','ico'
+    'jpg','jpeg','png','gif','webp','bmp','svg','avif','tiff'
 ]);
-const SLIDE_MS        = 200;   // ghost animation (ms)
-const SWIPE_THRESHOLD = 0.12;
 
-let galleryData  = [];
-let animTimeout  = null;
-let counterRAF   = null;
-
-const LB = {
-    open:false, colIdx:-1, imgIdx:-1,
-    el:null, mainImg:null, ghostImg:null,
-    loader:null, counterInner:null,
-    descEl:null, folderEl:null,
-    prevBtn:null, nextBtn:null, stage:null,
-    dragging:false, dragStartX:0, dragDelta:0, dragPid:null,
-};
-
-// ════════════════ INIT ════════════════
-document.addEventListener('DOMContentLoaded', () => {
-    LB.el           = document.getElementById('lightbox');
-    LB.mainImg      = LB.el.querySelector('.lb-img-a');
-    LB.ghostImg     = LB.el.querySelector('.lb-img-b');
-    LB.loader       = LB.el.querySelector('.lb-loader');
-    LB.counterInner = LB.el.querySelector('.lb-counter-inner');
-    LB.descEl       = LB.el.querySelector('.lb-desc');
-    LB.folderEl     = LB.el.querySelector('.lb-folder');
-    LB.prevBtn      = LB.el.querySelector('.lb-nav-prev');
-    LB.nextBtn      = LB.el.querySelector('.lb-nav-next');
-    LB.stage        = document.getElementById('lb-stage');
-
-    setupDrag();
-    document.addEventListener('keydown', onKey);
-    window.addEventListener('hashchange', render);
-
-    if(location.hostname==='localhost'||location.hostname==='127.0.0.1'){
-        if(CONFIG.mode!=='local'){
-            console.log('🔧 Wykryto localhost — tryb local');
-            CONFIG.mode='local';
-        }
-    }
-    render();
-});
-
-// ════════════════ TOAST ════════════════
-let toastTimer=null;
-function showToast(msg,ms=5000){
-    const t=document.getElementById('toast');
-    t.textContent=msg; t.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer=setTimeout(()=>t.classList.remove('show'),ms);
+/* ---------- parsowanie URL ---------- */
+function getFolders() {
+    const hash = window.location.hash.slice(1);
+    if (!hash) return [];
+    return hash
+        .split(',')
+        .map(f => decodeURIComponent(f.trim()))
+        .filter(Boolean);
 }
 
-// ════════════════ URL → FOLDERS ════════════════
-function getFolders(){
-    const h=location.hash.slice(1);
-    if(!h)return[];
-    return h.split(',').map(f=>decodeURIComponent(f.trim())).filter(Boolean);
-}
+/* ---------- pobieranie listy obrazków z GitHub API ---------- */
+async function fetchImages(folder) {
+    const path = CONFIG.basePath
+        ? CONFIG.basePath + '/' + folder
+        : folder;
 
-// ════════════════ FETCH ════════════════
-async function fetchImages(folder){
-    return CONFIG.mode==='local'?fetchLocal(folder):fetchGH(folder);
-}
+    const apiPath = path.split('/').map(encodeURIComponent).join('/');
+    const url =
+        `https://api.github.com/repos/` +
+        `${CONFIG.githubUser}/${CONFIG.githubRepo}` +
+        `/contents/${apiPath}?ref=${CONFIG.branch}`;
 
-async function fetchLocal(folder){
-    const base=CONFIG.localBase==='.'?folder:`${CONFIG.localBase}/${folder}`;
-    let r;
-    try{r=await fetch(`/_api/list/${encodeURIComponent(folder)}`);}
-    catch(e){throw new Error('Nie mogę połączyć z serwerem. Uruchom: python3 serve.py');}
-    if(!r.ok){const b=await r.json().catch(()=>({}));throw new Error(b.error||`Folder „${folder}" — ${r.status}`);}
-    const files=await r.json();
-    if(!Array.isArray(files))return[];
-    return files.map(f=>({name:f,src:`${base}/${f}`}));
-}
+    const res = await fetch(url);
 
-async function fetchGH(folder){
-    const p=CONFIG.basePath?`${CONFIG.basePath}/${folder}`:folder;
-    const enc=p.split('/').map(encodeURIComponent).join('/');
-    const url=`https://api.github.com/repos/${CONFIG.githubUser}/${CONFIG.githubRepo}/contents/${enc}?ref=${CONFIG.branch}`;
-    const r=await fetch(url);
-    if(!r.ok)throw new Error(`Folder „${folder}" — ${r.status}`);
-    const files=await r.json();
-    if(!Array.isArray(files))throw new Error(`„${folder}" nie jest folderem`);
+    if (!res.ok)
+        throw new Error(`Folder „${folder}" nie znaleziony (${res.status})`);
+
+    const files = await res.json();
+
+    if (!Array.isArray(files))
+        throw new Error(`„${folder}" nie jest folderem`);
+
     return files
-        .filter(f=>f.type==='file'&&IMG_EXT.has(f.name.split('.').pop().toLowerCase()))
-        .sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true}))
-        .map(f=>({name:f.name,src:f.download_url}));
+        .filter(f =>
+            f.type === 'file' &&
+            IMG_EXT.has(f.name.split('.').pop().toLowerCase())
+        )
+        .sort((a, b) =>
+            a.name.localeCompare(b.name, undefined, { numeric: true })
+        )
+        .map(f => f.download_url);          // gotowy URL do obrazka
 }
 
-async function fetchDescs(folder){
-    try{
-        let url;
-        if(CONFIG.mode==='local'){
-            const base=CONFIG.localBase==='.'?folder:`${CONFIG.localBase}/${folder}`;
-            url=`${base}/descriptions.json`;
-        }else{
-            const p=CONFIG.basePath?`${CONFIG.basePath}/${folder}`:folder;
-            url=`https://raw.githubusercontent.com/${CONFIG.githubUser}/${CONFIG.githubRepo}/${CONFIG.branch}/${p}/descriptions.json`;
-        }
-        const r=await fetch(url);
-        if(!r.ok)return{};
-        return await r.json();
-    }catch{return{};}
+/* ---------- lightbox ---------- */
+function openLightbox(src) {
+    const lb = document.getElementById('lightbox');
+    lb.querySelector('img').src = src;
+    lb.classList.add('open');
 }
 
-// ════════════════ RENDER ════════════════
-async function render(){
-    const folders=getFolders();
-    const msgEl=document.getElementById('message');
-    const galEl=document.getElementById('gallery');
-    galEl.innerHTML='';
-    galleryData=[];
+/* ---------- renderowanie galerii ---------- */
+async function render() {
+    const folders = getFolders();
+    const msgEl  = document.getElementById('message');
+    const galEl  = document.getElementById('gallery');
 
-    if(!folders.length){
-        msgEl.style.display='';
-        const base=location.origin+location.pathname;
-        msgEl.innerHTML=`
-            <div class="glow"></div><div class="glow"></div><div class="glow"></div>
+    galEl.innerHTML = '';
+
+    // brak folderów → ekran powitalny
+    if (!folders.length) {
+        msgEl.style.display = '';
+        msgEl.innerHTML = `
             <h2>📷 Galeria</h2>
-            <p>Podaj foldery po <strong>#</strong> w adresie:</p>
-            <code>${base}#folder1,folder2,folder3</code>
-            <p style="margin-top:32px;font-size:.8em;color:#555">
-                Tryb: <strong>${CONFIG.mode}</strong>
-                ${CONFIG.mode==='local'?'— upewnij się że <code style="padding:4px 8px;font-size:.9em">python3 serve.py</code> działa':''}
+            <p>Dodaj nazwy folderów po <strong>#</strong> w adresie URL:</p>
+            <code>${location.origin}${location.pathname}#folder1,folder2,folder3</code>
+            <p style="margin-top:24px;font-size:.85em;color:#555">
+                Lub użyj ładnego adresu (jeśli 404.html jest wgrany):<br>
+                <code style="margin-top:6px;font-size:.95em">${location.origin}${location.pathname}folder1,folder2,folder3</code>
             </p>`;
         return;
     }
-    msgEl.style.display='none';
 
-    const cols=folders.map(folder=>{
-        const col=document.createElement('div');
-        col.className='column';
-        const hdr=document.createElement('div');
-        hdr.className='column-header';
-        hdr.textContent=folder;
-        col.appendChild(hdr);
-        const sp=document.createElement('div');
-        sp.className='spinner';
-        col.appendChild(sp);
+    msgEl.style.display = 'none';
+
+    // natychmiast twórz kolumny ze spinnerami
+    const columns = folders.map(folder => {
+        const col = document.createElement('div');
+        col.className = 'column';
+
+        const header = document.createElement('div');
+        header.className = 'column-header';
+        header.textContent = folder;
+        col.appendChild(header);
+
+        const spinner = document.createElement('div');
+        spinner.className = 'spinner';
+        col.appendChild(spinner);
+
         galEl.appendChild(col);
-        return{col,spinner:sp};
+        return { col, spinner };
     });
 
-    const results=await Promise.all(folders.map(async folder=>{
-        try{
-            const[imgs,descs]=await Promise.all([fetchImages(folder),fetchDescs(folder)]);
-            imgs.forEach(i=>i.desc=descs[i.name]||'');
-            return{images:imgs,error:null};
-        }catch(e){return{images:[],error:e.message};}
-    }));
+    // pobierz wszystkie foldery równolegle
+    const results = await Promise.all(
+        folders.map(async folder => {
+            try {
+                return { images: await fetchImages(folder), error: null };
+            } catch (e) {
+                return { images: [], error: e.message };
+            }
+        })
+    );
 
-    results.forEach(({images,error},ci)=>{
-        const{col,spinner}=cols[ci];
+    // wstaw obrazki do kolumn
+    results.forEach(({ images, error }, i) => {
+        const { col, spinner } = columns[i];
         spinner.remove();
-        galleryData[ci]={folder:folders[ci],images};
 
-        if(error){
-            const s=document.createElement('div');
-            s.className='status error';s.textContent=error;
-            col.appendChild(s);showToast(error);return;
-        }
-        if(!images.length){
-            const s=document.createElement('div');
-            s.className='status';s.textContent='Brak obrazków';
-            col.appendChild(s);return;
+        if (error) {
+            const s = document.createElement('div');
+            s.className = 'status error';
+            s.textContent = error;
+            col.appendChild(s);
+            return;
         }
 
-        images.forEach((imgData,ii)=>{
-            const wrap=document.createElement('div');
-            wrap.className='col-img-wrap';
-            wrap.addEventListener('click',()=>openLightbox(ci,ii));
-            const img=document.createElement('img');
-            img.src=imgData.src;img.alt=imgData.name;
-            img.loading='lazy';
-            img.onload=()=>img.classList.add('loaded');
-            img.onerror=()=>{wrap.style.display='none';};
-            wrap.appendChild(img);col.appendChild(wrap);
+        if (!images.length) {
+            const s = document.createElement('div');
+            s.className = 'status';
+            s.textContent = 'Brak obrazków w tym folderze';
+            col.appendChild(s);
+            return;
+        }
+
+        images.forEach(src => {
+            const img = document.createElement('img');
+            img.src = src;
+            img.loading = 'lazy';
+            img.alt = '';
+            img.onload = () => img.classList.add('loaded');
+            img.onclick = () => openLightbox(src);
+            col.appendChild(img);
         });
     });
 }
 
-// ════════════════ LIGHTBOX — OPEN / CLOSE ════════════════
-function openLightbox(ci,ii){
-    cancelAnim();
-    LB.colIdx=ci;LB.imgIdx=ii;LB.open=true;
+/* ---------- eventy ---------- */
+window.addEventListener('hashchange', render);
 
-    const d=galleryData[ci];
-    LB.folderEl.textContent=d.folder;
-    resetImgs();
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape')
+        document.getElementById('lightbox').classList.remove('open');
+});
 
-    const img=d.images[ii];
-    LB.loader.classList.add('show');
-    LB.mainImg.onload=()=>LB.loader.classList.remove('show');
-    LB.mainImg.style.transition='none';
-    LB.mainImg.style.transform='translateX(0)';
-    LB.mainImg.style.opacity='1';
-    LB.mainImg.src=img.src;
-
-    setCounterInstant(ii+1,d.images.length);
-    LB.descEl.textContent=img.desc||'';
-    LB.descEl.style.opacity=img.desc?'1':'0';
-    updateNav();
-
-    LB.el.classList.add('open');
-    document.body.style.overflow='hidden';
-    preloadAdjacent();
-}
-
-function closeLightbox(){
-    cancelAnim();
-    LB.open=false;
-    LB.el.classList.remove('open');
-    document.body.style.overflow='';
-    resetImgs();
-}
-
-function resetImgs(){
-    [LB.mainImg,LB.ghostImg].forEach(img=>{
-        img.style.cssText='';img.src='';
-        img.style.opacity='0';
-        delete img.dataset.peekSrc;
-    });
-    LB.loader.classList.remove('show');
-}
-
-function updateNav(){
-    const d=galleryData[LB.colIdx];
-    LB.prevBtn.classList.toggle('disabled',LB.imgIdx<=0);
-    LB.nextBtn.classList.toggle('disabled',LB.imgIdx>=d.images.length-1);
-}
-
-// ════════════════ NAVIGATE — RAPID-FIRE SAFE ════════════════
-function navigateLB(dir){
-    const d=galleryData[LB.colIdx];
-    const ni=LB.imgIdx+dir;
-    if(ni<0||ni>=d.images.length)return;
-
-    // ── zawsze anuluj poprzednią animację (rapid-fire) ──
-    cancelAnim();
-
-    const nImg=d.images[ni];
-    LB.imgIdx=ni;
-
-    // ── MAIN: natychmiast na środku, pod ghostem ──
-    LB.mainImg.style.transition='none';
-    LB.mainImg.style.transform='translateX(0)';
-    LB.mainImg.style.opacity='1';
-    LB.mainImg.style.zIndex='2';
-    LB.mainImg.src=nImg.src;
-
-    // ── GHOST: speed-echo NAD mainem, z boku → centrum ──
-    LB.ghostImg.src=nImg.src;
-    LB.ghostImg.style.transition='none';
-    LB.ghostImg.style.transform=`translateX(${dir*70}%)`;
-    LB.ghostImg.style.opacity='0.2';
-    LB.ghostImg.style.zIndex='3';
-    LB.ghostImg.offsetHeight;                      // reflow
-
-    LB.ghostImg.style.transition=
-        `transform ${SLIDE_MS}ms cubic-bezier(.22,.61,.36,1), `+
-        `opacity ${SLIDE_MS}ms ease`;
-    LB.ghostImg.style.transform='translateX(0)';
-    LB.ghostImg.style.opacity='0';
-
-    // ── UI ──
-    popCounter(ni+1,d.images.length);
-    LB.descEl.textContent=nImg.desc||'';
-    LB.descEl.style.opacity=nImg.desc?'1':'0';
-    updateNav();
-
-    animTimeout=setTimeout(()=>{
-        finishGhost();
-        preloadAdjacent();
-    },SLIDE_MS);
-}
-
-// ════════════════ ANIMATION CLEANUP ════════════════
-function cancelAnim(){
-    if(animTimeout){clearTimeout(animTimeout);animTimeout=null;}
-
-    // jeśli ghost wyświetla obraz (np. po swipe) — przenieś do main
-    if(LB.ghostImg.style.opacity==='1'&&LB.ghostImg.src){
-        LB.mainImg.src=LB.ghostImg.src;
-    }
-
-    // reset main do stanu neutralnego
-    LB.mainImg.style.transition='none';
-    LB.mainImg.style.transform='translateX(0)';
-    LB.mainImg.style.opacity='1';
-    LB.mainImg.style.zIndex='';
-
-    finishGhost();
-}
-
-function finishGhost(){
-    LB.ghostImg.style.transition='none';
-    LB.ghostImg.style.opacity='0';
-    LB.ghostImg.style.transform='';
-    LB.ghostImg.style.zIndex='';
-    delete LB.ghostImg.dataset.peekSrc;
-}
-
-// ════════════════ COUNTER ════════════════
-function setCounterInstant(num,total){
-    if(counterRAF){cancelAnimationFrame(counterRAF);counterRAF=null;}
-    const el=LB.counterInner;
-    el.style.transition='none';
-    el.style.transform='translateY(0)';
-    el.style.opacity='1';
-    el.textContent=`${num} / ${total}`;
-}
-
-function popCounter(num,total){
-    if(counterRAF){cancelAnimationFrame(counterRAF);counterRAF=null;}
-    const el=LB.counterInner;
-    el.textContent=`${num} / ${total}`;
-    el.style.transition='none';
-    el.style.transform='translateY(6px)';
-    el.style.opacity='0';
-
-    counterRAF=requestAnimationFrame(()=>{
-        el.style.transition='transform 90ms ease-out, opacity 90ms ease-out';
-        el.style.transform='translateY(0)';
-        el.style.opacity='1';
-        counterRAF=null;
-    });
-}
-
-// ════════════════ PRELOAD ════════════════
-function preloadAdjacent(){
-    const d=galleryData[LB.colIdx];
-    [-1,1,2,-2,3].forEach(off=>{
-        const i=LB.imgIdx+off;
-        if(i>=0&&i<d.images.length){
-            const p=new Image();p.src=d.images[i].src;
-        }
-    });
-}
-
-// ════════════════ DRAG / SWIPE ════════════════
-function setupDrag(){
-    const stage=LB.stage;
-
-    stage.addEventListener('pointerdown',e=>{
-        if(!LB.open)return;
-        cancelAnim();
-        LB.dragging=true;
-        LB.dragStartX=e.clientX;
-        LB.dragDelta=0;
-        LB.dragPid=e.pointerId;
-        stage.setPointerCapture(e.pointerId);
-        LB.mainImg.style.transition='none';
-    });
-
-    stage.addEventListener('pointermove',e=>{
-        if(!LB.dragging||e.pointerId!==LB.dragPid)return;
-        let delta=e.clientX-LB.dragStartX;
-        const d=galleryData[LB.colIdx];
-
-        // opór na krańcach
-        if((LB.imgIdx<=0&&delta>0)||
-           (LB.imgIdx>=d.images.length-1&&delta<0)){
-            delta*=0.15;
-        }
-        LB.dragDelta=delta;
-        LB.mainImg.style.transform=`translateX(${delta}px)`;
-
-        // peek next/prev
-        const dir=delta<0?1:-1;
-        const pi=LB.imgIdx+dir;
-        if(pi>=0&&pi<d.images.length){
-            if(LB.ghostImg.dataset.peekSrc!==d.images[pi].src){
-                LB.ghostImg.src=d.images[pi].src;
-                LB.ghostImg.dataset.peekSrc=d.images[pi].src;
-            }
-            LB.ghostImg.style.transition='none';
-            LB.ghostImg.style.opacity='1';
-            LB.ghostImg.style.transform=
-                `translateX(${dir*stage.offsetWidth+delta}px)`;
-        }
-    });
-
-    stage.addEventListener('pointerup',e=>{
-        if(!LB.dragging||e.pointerId!==LB.dragPid)return;
-        LB.dragging=false;
-        const sw=stage.offsetWidth;
-        const abs=Math.abs(LB.dragDelta);
-
-        if(abs<4){closeLightbox();return;}      // tap
-
-        const d=galleryData[LB.colIdx];
-        if(abs>sw*SWIPE_THRESHOLD){
-            const dir=LB.dragDelta<0?1:-1;
-            const ni=LB.imgIdx+dir;
-            if(ni>=0&&ni<d.images.length){
-                completeSwipe(dir,ni,d);return;
-            }
-        }
-        snapBack();
-    });
-
-    stage.addEventListener('pointercancel',()=>{
-        if(LB.dragging){LB.dragging=false;snapBack();}
-    });
-}
-
-function completeSwipe(dir,ni,d){
-    const nImg=d.images[ni];
-    LB.imgIdx=ni;
-
-    // ghostImg ma już załadowany nowy obraz (z peek)
-    // → snap na środek, nad main
-    LB.ghostImg.style.transition='none';
-    LB.ghostImg.style.transform='translateX(0)';
-    LB.ghostImg.style.opacity='1';
-    LB.ghostImg.style.zIndex='3';
-
-    // stary main wyjeżdża
-    const ease=`${SLIDE_MS}ms cubic-bezier(.22,.61,.36,1)`;
-    LB.mainImg.style.zIndex='1';
-    LB.mainImg.style.transition=`transform ${ease}, opacity ${SLIDE_MS}ms ease`;
-    LB.mainImg.style.transform=`translateX(${-dir*LB.stage.offsetWidth}px)`;
-    LB.mainImg.style.opacity='0';
-
-    popCounter(ni+1,d.images.length);
-    LB.descEl.textContent=nImg.desc||'';
-    LB.descEl.style.opacity=nImg.desc?'1':'0';
-    updateNav();
-
-    animTimeout=setTimeout(()=>{
-        // przenieś obraz do main, resetuj ghost
-        LB.mainImg.style.transition='none';
-        LB.mainImg.src=nImg.src;
-        LB.mainImg.style.transform='translateX(0)';
-        LB.mainImg.style.opacity='1';
-        LB.mainImg.style.zIndex='';
-
-        LB.ghostImg.style.opacity='0';
-        LB.ghostImg.style.zIndex='';
-        LB.ghostImg.style.transform='';
-        delete LB.ghostImg.dataset.peekSrc;
-
-        animTimeout=null;
-        preloadAdjacent();
-    },SLIDE_MS);
-}
-
-function snapBack(){
-    const ease=`${SLIDE_MS}ms ease`;
-    LB.mainImg.style.transition=`transform ${ease}`;
-    LB.mainImg.style.transform='translateX(0)';
-    LB.ghostImg.style.transition=`opacity ${ease}`;
-    LB.ghostImg.style.opacity='0';
-}
-
-// ════════════════ KEYBOARD ════════════════
-function onKey(e){
-    if(!LB.open)return;
-    switch(e.key){
-        case'ArrowLeft': e.preventDefault();navigateLB(-1);break;
-        case'ArrowRight':e.preventDefault();navigateLB(1);break;
-        case'Escape':    closeLightbox();break;
-    }
-}
+render();
 </script>
 </body>
 </html>
