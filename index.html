@@ -640,40 +640,39 @@ function navigateLB(dir){
     LB.animating = true;
     const nImg = d.images[ni];
 
-    const outgoing  = LB.activeImg;
-    const incoming  = LB.inactiveImg;
+    const outgoing = LB.activeImg;
+    const incoming = LB.inactiveImg;
 
-    // prepare incoming off‑screen
-    incoming.src = nImg.src;
+    // ── INCOMING: natychmiast na środku, pod spodem ──
+    incoming.src              = nImg.src;
     incoming.style.transition = 'none';
-    incoming.style.transform  = `translateX(${dir * 100}%)`;
+    incoming.style.transform  = 'translateX(0)';
     incoming.style.opacity    = '1';
-    incoming.offsetHeight;                     // force reflow
+    incoming.style.zIndex     = '1';
 
-    // animate both
+    // ── OUTGOING: zjeżdża w bok (na wierzchu) ──
+    outgoing.style.zIndex     = '2';
     const ease = `${SLIDE_MS}ms cubic-bezier(.22,.61,.36,1)`;
-    incoming.style.transition = `transform ${ease}`;
     outgoing.style.transition = `transform ${ease}, opacity ${SLIDE_MS}ms ease`;
+    outgoing.style.transform  = `translateX(${-dir * 100}%)`;
+    outgoing.style.opacity    = '0';
 
-    incoming.style.transform = 'translateX(0)';
-    outgoing.style.transform = `translateX(${-dir * 100}%)`;
-    outgoing.style.opacity   = '0.15';
-
-    // update info
     LB.imgIdx = ni;
     animateCounter(ni+1, d.images.length);
     animateDesc(nImg.desc);
     updateNav();
 
     setTimeout(() => {
-        // swap roles
         LB.activeImg   = incoming;
         LB.inactiveImg = outgoing;
         outgoing.style.transition = 'none';
         outgoing.style.opacity    = '0';
         outgoing.style.transform  = '';
+        outgoing.style.zIndex     = '';
+        incoming.style.zIndex     = '';
+        delete outgoing.dataset.peekSrc;
         LB.animating = false;
-        preload();
+        preloadAdjacent();
     }, SLIDE_MS);
 }
 
