@@ -112,10 +112,8 @@ body{
 .col-img-wrap{
     margin:8px 10px;
     overflow:hidden;
-    border-radius:8px;
-    box-shadow:
-        0 2px 8px rgba(0,0,0,.25),
-        0 4px 20px rgba(0,0,0,.15);
+    /*border-radius:8px;*/
+    box-shadow: 3px 0px 10px 0px rgba(40, 40, 40, 0.8);
     transition:box-shadow .35s ease,transform .35s cubic-bezier(.25,.46,.45,.94);
     cursor:pointer;
     position:relative;
@@ -370,7 +368,7 @@ const CONFIG = {
 const IMG_EXT = new Set([
     'jpg','jpeg','png','gif','webp','bmp','svg','avif','tiff','ico'
 ]);
-const SLIDE_MS = 140;          // ← szybkość animacji slide (ms)
+const SLIDE_MS = 1000;          // ← szybkość animacji slide (ms)
 const SWIPE_THRESHOLD = 0.12;  // % szerokości stage = min. swipe
 
 // ── Gallery data ──
@@ -828,15 +826,20 @@ function setupDrag(){
 
 function completeSwipe(dir, ni, d){
     LB.animating = true;
-    const sw   = LB.stage.offsetWidth;
-    const ease = `${SLIDE_MS}ms cubic-bezier(.22,.61,.36,1)`;
+    const sw = LB.stage.offsetWidth;
 
+    // ── INCOMING: teleport na środek ──
+    LB.inactiveImg.style.transition = 'none';
+    LB.inactiveImg.style.transform  = 'translateX(0)';
+    LB.inactiveImg.style.opacity    = '1';
+    LB.inactiveImg.style.zIndex     = '1';
+
+    // ── OUTGOING: dokańcza zjazd ──
+    LB.activeImg.style.zIndex       = '2';
+    const ease = `${SLIDE_MS}ms cubic-bezier(.22,.61,.36,1)`;
     LB.activeImg.style.transition   = `transform ${ease}, opacity ${SLIDE_MS}ms ease`;
     LB.activeImg.style.transform    = `translateX(${-dir * sw}px)`;
-    LB.activeImg.style.opacity      = '0.15';
-
-    LB.inactiveImg.style.transition = `transform ${ease}`;
-    LB.inactiveImg.style.transform  = 'translateX(0)';
+    LB.activeImg.style.opacity      = '0';
 
     LB.imgIdx = ni;
     animateCounter(ni+1, d.images.length);
@@ -851,10 +854,12 @@ function completeSwipe(dir, ni, d){
         tmp.style.transition = 'none';
         tmp.style.opacity    = '0';
         tmp.style.transform  = '';
+        tmp.style.zIndex     = '';
+        LB.activeImg.style.zIndex = '';
         delete tmp.dataset.peekSrc;
 
         LB.animating = false;
-        preload();
+        preloadAdjacent();
     }, SLIDE_MS);
 }
 
