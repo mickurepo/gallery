@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galeria</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0a;
+            color: #fff;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            min-height: 100vh;
+        }
+
+        /* ---------- ekran powitalny ---------- */
+        #message {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            min-height: 100vh;
+            text-align: center;
+            padding: 20px;
+            color: #888;
+        }
+        #message h2 {
+            font-size: 2.4em;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+        #message p {
+            font-size: 1.1em;
+            margin-bottom: 12px;
+        }
+        #message code {
+            background: #161628;
+            padding: 12px 22px;
+            border-radius: 8px;
+            color: #4fc3f7;
+            font-size: 1em;
+            word-break: break-all;
+        }
+
+        /* ---------- galeria – kolumny ---------- */
+        #gallery {
+            display: flex;
+            width: 100%;
+        }
+
+        .column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            border-right: 1px solid #1a1a1a;
+        }
+        .column:last-child {
+            border-right: none;
+        }
+
+        .column-header {
+            text-align: center;
+            padding: 14px 8px;
+            font-size: .9em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            background: #111;
+            border-bottom: 2px solid #222;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .column img {
+            width: 100%;
+            display: block;
+            opacity: 0;
+            transition: opacity .35s ease;
+            cursor: zoom-in;
+        }
+        .column img.loaded {
+            opacity: 1;
+        }
+
+        .status {
+            text-align: center;
+            padding: 50px 10px;
+            font-size: .9em;
+            color: #444;
+        }
+        .status.error {
+            color: #e74c3c;
+        }
+
+        /* ---------- lightbox ---------- */
+        #lightbox {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .95);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            cursor: zoom-out;
+        }
+        #lightbox.open {
+            display: flex;
+        }
+        #lightbox img {
+            max-width: 95vw;
+            max-height: 95vh;
+            object-fit: contain;
+            border-radius: 4px;
+        }
+
+        /* ---------- loader spinner ---------- */
+        .spinner {
+            margin: 60px auto;
+            width: 36px;
+            height: 36px;
+            border: 3px solid #222;
+            border-top-color: #4fc3f7;
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div id="message"></div>
+<div id="gallery"></div>
+
+<div id="lightbox" onclick="this.classList.remove('open')">
+    <img src="" alt="">
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+//               K O N F I G U R A C J A
+// ═══════════════════════════════════════════════
+const CONFIG = {
+    githubUser : 'TWOJ_USERNAME',   // ← username GitHub
+    githubRepo : 'TWOJ_REPO',      // ← nazwa repozytorium
+    branch     : 'main',           // ← branch (main / master)
+    basePath   : ''                // ← prefix folderu, np. 'images'
+                                   //   (puste = foldery w rootcie repo)
+};
+// ═══════════════════════════════════════════════
+
+const IMG_EXT = new Set([
+    'jpg','jpeg','png','gif','webp','bmp','svg','avif','tiff'
+]);
+
+/* ---------- parsowanie URL ---------- */
+function getFolders() {
+    const hash = window.location.hash.slice(1);
+    if (!hash) return [];
+    return hash
+        .split(',')
+        .map(f => decodeURIComponent(f.trim()))
+        .filter(Boolean);
+}
+
+/* ---------- pobieranie listy obrazków z GitHub API ---------- */
+async function fetchImages(folder) {
+    const path = CONFIG.basePath
+        ? CONFIG.basePath + '/' + folder
+        : folder;
+
+    const apiPath = path.split('/').map(encodeURIComponent).join('/');
+    const url =
+        `https://api.github.com/repos/` +
+        `${CONFIG.githubUser}/${CONFIG.githubRepo}` +
+        `/contents/${apiPath}?ref=${CONFIG.branch}`;
+
+    const res = await fetch(url);
+
+    if (!res.ok)
+        throw new Error(`Folder „${folder}" nie znaleziony (${res.status})`);
+
+    const files = await res.json();
+
+    if (!Array.isArray(files))
+        throw new Error(`„${folder}" nie jest folderem`);
+
+    return files
+        .filter(f =>
+            f.type === 'file' &&
+            IMG_EXT.has(f.name.split('.').pop().toLowerCase())
+        )
+        .sort((a, b) =>
+            a.name.localeCompare(b.name, undefined, { numeric: true })
+        )
+        .map(f => f.download_url);          // gotowy URL do obrazka
+}
+
+/* ---------- lightbox ---------- */
+function openLightbox(src) {
+    const lb = document.getElementById('lightbox');
+    lb.querySelector('img').src = src;
+    lb.classList.add('open');
+}
+
+/* ---------- renderowanie galerii ---------- */
+async function render() {
+    const folders = getFolders();
+    const msgEl  = document.getElementById('message');
+    const galEl  = document.getElementById('gallery');
+
+    galEl.innerHTML = '';
+
+    // brak folderów → ekran powitalny
+    if (!folders.length) {
+        msgEl.style.display = '';
+        msgEl.innerHTML = `
+            <h2>📷 Galeria</h2>
+            <p>Dodaj nazwy folderów po <strong>#</strong> w adresie URL:</p>
+            <code>${location.origin}${location.pathname}#folder1,folder2,folder3</code>
+            <p style="margin-top:24px;font-size:.85em;color:#555">
+                Lub użyj ładnego adresu (jeśli 404.html jest wgrany):<br>
+                <code style="margin-top:6px;font-size:.95em">${location.origin}${location.pathname}folder1,folder2,folder3</code>
+            </p>`;
+        return;
+    }
+
+    msgEl.style.display = 'none';
+
+    // natychmiast twórz kolumny ze spinnerami
+    const columns = folders.map(folder => {
+        const col = document.createElement('div');
+        col.className = 'column';
+
+        const header = document.createElement('div');
+        header.className = 'column-header';
+        header.textContent = folder;
+        col.appendChild(header);
+
+        const spinner = document.createElement('div');
+        spinner.className = 'spinner';
+        col.appendChild(spinner);
+
+        galEl.appendChild(col);
+        return { col, spinner };
+    });
+
+    // pobierz wszystkie foldery równolegle
+    const results = await Promise.all(
+        folders.map(async folder => {
+            try {
+                return { images: await fetchImages(folder), error: null };
+            } catch (e) {
+                return { images: [], error: e.message };
+            }
+        })
+    );
+
+    // wstaw obrazki do kolumn
+    results.forEach(({ images, error }, i) => {
+        const { col, spinner } = columns[i];
+        spinner.remove();
+
+        if (error) {
+            const s = document.createElement('div');
+            s.className = 'status error';
+            s.textContent = error;
+            col.appendChild(s);
+            return;
+        }
+
+        if (!images.length) {
+            const s = document.createElement('div');
+            s.className = 'status';
+            s.textContent = 'Brak obrazków w tym folderze';
+            col.appendChild(s);
+            return;
+        }
+
+        images.forEach(src => {
+            const img = document.createElement('img');
+            img.src = src;
+            img.loading = 'lazy';
+            img.alt = '';
+            img.onload = () => img.classList.add('loaded');
+            img.onclick = () => openLightbox(src);
+            col.appendChild(img);
+        });
+    });
+}
+
+/* ---------- eventy ---------- */
+window.addEventListener('hashchange', render);
+
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape')
+        document.getElementById('lightbox').classList.remove('open');
+});
+
+render();
+</script>
+</body>
+</html>
