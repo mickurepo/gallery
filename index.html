@@ -332,73 +332,43 @@ body{
 
 <script>
 // ════════════════════════════════════════════════════════════
-//    K O N F I G U R A C J A   —   ZMIEŃ TUTAJ ↓↓↓
+//    K O N F I G U R A C J A
 // ════════════════════════════════════════════════════════════
 const CONFIG = {
-
-    // ── TRYB ──────────────────────────────────
-    //  'github'  →  pobiera listę plików z GitHub API
-    //  'local'   →  pobiera z lokalnego serwera
-    //                (python3 -m http.server 8000)
-    mode: 'github',   // ← ZMIEŃ NA 'local' DO TESTÓW
-
-    // ── GITHUB (tylko gdy mode = 'github') ────
-    githubUser : 'mickurepo',   // ← twój login
-    githubRepo : 'gallery',      // ← nazwa repo
-    branch     : 'dev',           // ← branch
-
-    // ── LOCAL (tylko gdy mode = 'local') ──────
-    //  ścieżka do katalogu z folderami
-    //  '.'  = ten sam katalog co index.html
-    localBase  : '.',
-
-    // ── WSPÓLNE ───────────────────────────────
-    //  prefix jeśli foldery NIE są w rootcie repo
-    //  np. 'images'  →  repo/images/folder1/...
-    //  ''  →  repo/folder1/...
-    basePath   : 'images',
+    mode: 'local',
+    //mode: 'github',
+    localBase:   '.',
+    githubUser:  'TWOJ_USERNAME',
+    githubRepo:  'TWOJ_REPO',
+    branch:      'main',
+    basePath:    '',
 };
-//
-//  ⚠ GitHub API: 60 req/h bez tokena.
-//    Przy wielu testach możesz trafić na limit.
-//    W trybie 'local' limitu nie ma.
-//
 // ════════════════════════════════════════════════════════════
 
 const IMG_EXT = new Set([
     'jpg','jpeg','png','gif','webp','bmp','svg','avif','tiff','ico'
 ]);
-const SLIDE_MS = 1000;          // ← szybkość animacji slide (ms)
-const SWIPE_THRESHOLD = 0.12;  // % szerokości stage = min. swipe
+const SLIDE_MS        = 200;   // ghost animation (ms)
+const SWIPE_THRESHOLD = 0.12;
 
-// ── Gallery data ──
-let galleryData = [];  // [ {folder, images:[{src,name,desc}]} ]
+let galleryData  = [];
+let animTimeout  = null;
+let counterRAF   = null;
 
-// ── Lightbox state ──
 const LB = {
-    open: false,
-    colIdx: -1,
-    imgIdx: -1,
-    animating: false,
-    // DOM (filled on init)
-    el:null, imgA:null, imgB:null,
-    activeImg:null, inactiveImg:null,
+    open:false, colIdx:-1, imgIdx:-1,
+    el:null, mainImg:null, ghostImg:null,
     loader:null, counterInner:null,
     descEl:null, folderEl:null,
     prevBtn:null, nextBtn:null, stage:null,
-    // Drag
     dragging:false, dragStartX:0, dragDelta:0, dragPid:null,
 };
 
-// ════════════════════════════════════════
-//              INIT
-// ════════════════════════════════════════
+// ════════════════ INIT ════════════════
 document.addEventListener('DOMContentLoaded', () => {
     LB.el           = document.getElementById('lightbox');
-    LB.imgA         = LB.el.querySelector('.lb-img-a');
-    LB.imgB         = LB.el.querySelector('.lb-img-b');
-    LB.activeImg    = LB.imgA;
-    LB.inactiveImg  = LB.imgB;
+    LB.mainImg      = LB.el.querySelector('.lb-img-a');
+    LB.ghostImg     = LB.el.querySelector('.lb-img-b');
     LB.loader       = LB.el.querySelector('.lb-loader');
     LB.counterInner = LB.el.querySelector('.lb-counter-inner');
     LB.descEl       = LB.el.querySelector('.lb-desc');
@@ -410,475 +380,435 @@ document.addEventListener('DOMContentLoaded', () => {
     setupDrag();
     document.addEventListener('keydown', onKey);
     window.addEventListener('hashchange', render);
+
+    if(location.hostname==='localhost'||location.hostname==='127.0.0.1'){
+        if(CONFIG.mode!=='local'){
+            console.log('🔧 Wykryto localhost — tryb local');
+            CONFIG.mode='local';
+        }
+    }
     render();
 });
 
-// ════════════════════════════════════════
-//           URL → FOLDERS
-// ════════════════════════════════════════
+// ════════════════ TOAST ════════════════
+let toastTimer=null;
+function showToast(msg,ms=5000){
+    const t=document.getElementById('toast');
+    t.textContent=msg; t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer=setTimeout(()=>t.classList.remove('show'),ms);
+}
+
+// ════════════════ URL → FOLDERS ════════════════
 function getFolders(){
-    const h = location.hash.slice(1);
-    if(!h) return [];
+    const h=location.hash.slice(1);
+    if(!h)return[];
     return h.split(',').map(f=>decodeURIComponent(f.trim())).filter(Boolean);
 }
 
-// ════════════════════════════════════════
-//           FETCH IMAGE LIST
-// ════════════════════════════════════════
+// ════════════════ FETCH ════════════════
 async function fetchImages(folder){
-    return CONFIG.mode==='local' ? fetchLocal(folder) : fetchGH(folder);
-}
-
-async function fetchGH(folder){
-    const p = CONFIG.basePath ? `${CONFIG.basePath}/${folder}` : folder;
-    const encoded = p.split('/').map(encodeURIComponent).join('/');
-    const url = `https://api.github.com/repos/${CONFIG.githubUser}/${CONFIG.githubRepo}/contents/${encoded}?ref=${CONFIG.branch}`;
-    const r = await fetch(url);
-    if(!r.ok) throw new Error(`Folder „${folder}" — ${r.status}`);
-    const files = await r.json();
-    if(!Array.isArray(files)) throw new Error(`„${folder}" nie jest folderem`);
-    return files
-        .filter(f=>f.type==='file'&&IMG_EXT.has(f.name.split('.').pop().toLowerCase()))
-        .sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true}))
-        .map(f=>({name:f.name, src:f.download_url}));
+    return CONFIG.mode==='local'?fetchLocal(folder):fetchGH(folder);
 }
 
 async function fetchLocal(folder){
-    const base = `${CONFIG.localBase}/${folder}`;
-    const r = await fetch(`${base}/_files.json`);
-    if(!r.ok) throw new Error(`Brak ${folder}/_files.json`);
-    const files = await r.json();
+    const base=CONFIG.localBase==='.'?folder:`${CONFIG.localBase}/${folder}`;
+    let r;
+    try{r=await fetch(`/_api/list/${encodeURIComponent(folder)}`);}
+    catch(e){throw new Error('Nie mogę połączyć z serwerem. Uruchom: python3 serve.py');}
+    if(!r.ok){const b=await r.json().catch(()=>({}));throw new Error(b.error||`Folder „${folder}" — ${r.status}`);}
+    const files=await r.json();
+    if(!Array.isArray(files))return[];
+    return files.map(f=>({name:f,src:`${base}/${f}`}));
+}
+
+async function fetchGH(folder){
+    const p=CONFIG.basePath?`${CONFIG.basePath}/${folder}`:folder;
+    const enc=p.split('/').map(encodeURIComponent).join('/');
+    const url=`https://api.github.com/repos/${CONFIG.githubUser}/${CONFIG.githubRepo}/contents/${enc}?ref=${CONFIG.branch}`;
+    const r=await fetch(url);
+    if(!r.ok)throw new Error(`Folder „${folder}" — ${r.status}`);
+    const files=await r.json();
+    if(!Array.isArray(files))throw new Error(`„${folder}" nie jest folderem`);
     return files
-        .filter(f=>IMG_EXT.has(f.split('.').pop().toLowerCase()))
-        .sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}))
-        .map(f=>({name:f, src:`${base}/${f}`}));
+        .filter(f=>f.type==='file'&&IMG_EXT.has(f.name.split('.').pop().toLowerCase()))
+        .sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true}))
+        .map(f=>({name:f.name,src:f.download_url}));
 }
 
 async function fetchDescs(folder){
     try{
         let url;
         if(CONFIG.mode==='local'){
-            url = `${CONFIG.localBase}/${folder}/descriptions.json`;
-        } else {
-            const p = CONFIG.basePath ? `${CONFIG.basePath}/${folder}` : folder;
-            url = `https://raw.githubusercontent.com/${CONFIG.githubUser}/${CONFIG.githubRepo}/${CONFIG.branch}/${p}/descriptions.json`;
+            const base=CONFIG.localBase==='.'?folder:`${CONFIG.localBase}/${folder}`;
+            url=`${base}/descriptions.json`;
+        }else{
+            const p=CONFIG.basePath?`${CONFIG.basePath}/${folder}`:folder;
+            url=`https://raw.githubusercontent.com/${CONFIG.githubUser}/${CONFIG.githubRepo}/${CONFIG.branch}/${p}/descriptions.json`;
         }
-        const r = await fetch(url);
-        if(!r.ok) return {};
+        const r=await fetch(url);
+        if(!r.ok)return{};
         return await r.json();
-    } catch{ return {}; }
+    }catch{return{};}
 }
 
-// ════════════════════════════════════════
-//           RENDER GALLERY
-// ════════════════════════════════════════
+// ════════════════ RENDER ════════════════
 async function render(){
-    const folders = getFolders();
-    const msgEl   = document.getElementById('message');
-    const galEl   = document.getElementById('gallery');
+    const folders=getFolders();
+    const msgEl=document.getElementById('message');
+    const galEl=document.getElementById('gallery');
+    galEl.innerHTML='';
+    galleryData=[];
 
-    galEl.innerHTML = '';
-    galleryData = [];
-
-    // ── welcome screen ──
     if(!folders.length){
-        msgEl.style.display = '';
-        msgEl.innerHTML = `
-            <div class="glow"></div>
-            <div class="glow"></div>
+        msgEl.style.display='';
+        const base=location.origin+location.pathname;
+        msgEl.innerHTML=`
+            <div class="glow"></div><div class="glow"></div><div class="glow"></div>
             <h2>📷 Galeria</h2>
-            <p>Podaj foldery po <strong>#</strong> w adresie URL:</p>
-            <code>${location.origin+location.pathname}#folder1,folder2,folder3</code>
+            <p>Podaj foldery po <strong>#</strong> w adresie:</p>
+            <code>${base}#folder1,folder2,folder3</code>
             <p style="margin-top:32px;font-size:.8em;color:#555">
-                Foldery oddzielaj przecinkami
+                Tryb: <strong>${CONFIG.mode}</strong>
+                ${CONFIG.mode==='local'?'— upewnij się że <code style="padding:4px 8px;font-size:.9em">python3 serve.py</code> działa':''}
             </p>`;
         return;
     }
-    msgEl.style.display = 'none';
+    msgEl.style.display='none';
 
-    // ── create columns ──
-    const cols = folders.map(folder => {
-        const col = document.createElement('div');
-        col.className = 'column';
-        const hdr = document.createElement('div');
-        hdr.className = 'column-header';
-        hdr.textContent = folder;
+    const cols=folders.map(folder=>{
+        const col=document.createElement('div');
+        col.className='column';
+        const hdr=document.createElement('div');
+        hdr.className='column-header';
+        hdr.textContent=folder;
         col.appendChild(hdr);
-        const sp = document.createElement('div');
-        sp.className = 'spinner';
+        const sp=document.createElement('div');
+        sp.className='spinner';
         col.appendChild(sp);
         galEl.appendChild(col);
-        return {col, spinner:sp};
+        return{col,spinner:sp};
     });
 
-    // ── fetch all parallel ──
-    const results = await Promise.all(folders.map(async folder => {
-        try {
-            const [imgs, descs] = await Promise.all([
-                fetchImages(folder), fetchDescs(folder)
-            ]);
-            imgs.forEach(i => i.desc = descs[i.name] || '');
-            return {images:imgs, error:null};
-        } catch(e){
-            return {images:[], error:e.message};
-        }
+    const results=await Promise.all(folders.map(async folder=>{
+        try{
+            const[imgs,descs]=await Promise.all([fetchImages(folder),fetchDescs(folder)]);
+            imgs.forEach(i=>i.desc=descs[i.name]||'');
+            return{images:imgs,error:null};
+        }catch(e){return{images:[],error:e.message};}
     }));
 
-    // ── fill columns ──
-    results.forEach(({images,error}, ci) => {
-        const {col, spinner} = cols[ci];
+    results.forEach(({images,error},ci)=>{
+        const{col,spinner}=cols[ci];
         spinner.remove();
-        galleryData[ci] = {folder:folders[ci], images};
+        galleryData[ci]={folder:folders[ci],images};
 
         if(error){
-            const s = document.createElement('div');
-            s.className = 'status error';
-            s.textContent = error;
-            col.appendChild(s);
-            return;
+            const s=document.createElement('div');
+            s.className='status error';s.textContent=error;
+            col.appendChild(s);showToast(error);return;
         }
         if(!images.length){
-            const s = document.createElement('div');
-            s.className = 'status';
-            s.textContent = 'Brak obrazków';
-            col.appendChild(s);
-            return;
+            const s=document.createElement('div');
+            s.className='status';s.textContent='Brak obrazków';
+            col.appendChild(s);return;
         }
 
-        images.forEach((imgData, ii) => {
-            const wrap = document.createElement('div');
-            wrap.className = 'col-img-wrap';
-            wrap.addEventListener('click', () => openLightbox(ci, ii));
-
-            const img = document.createElement('img');
-            img.src = imgData.src;
-            img.alt = imgData.name;
-            img.loading = 'lazy';
-            img.onload = () => img.classList.add('loaded');
-            wrap.appendChild(img);
-            col.appendChild(wrap);
+        images.forEach((imgData,ii)=>{
+            const wrap=document.createElement('div');
+            wrap.className='col-img-wrap';
+            wrap.addEventListener('click',()=>openLightbox(ci,ii));
+            const img=document.createElement('img');
+            img.src=imgData.src;img.alt=imgData.name;
+            img.loading='lazy';
+            img.onload=()=>img.classList.add('loaded');
+            img.onerror=()=>{wrap.style.display='none';};
+            wrap.appendChild(img);col.appendChild(wrap);
         });
     });
 }
 
-// ════════════════════════════════════════
-//           LIGHTBOX — OPEN / CLOSE
-// ════════════════════════════════════════
-function openLightbox(ci, ii){
-    LB.colIdx = ci;
-    LB.imgIdx = ii;
-    LB.open = true;
-    LB.animating = false;
+// ════════════════ LIGHTBOX — OPEN / CLOSE ════════════════
+function openLightbox(ci,ii){
+    cancelAnim();
+    LB.colIdx=ci;LB.imgIdx=ii;LB.open=true;
 
-    const d = galleryData[ci];
-    LB.folderEl.textContent = d.folder;
+    const d=galleryData[ci];
+    LB.folderEl.textContent=d.folder;
+    resetImgs();
 
-    // reset images
-    resetImgSlots();
-    LB.activeImg = LB.imgA;
-    LB.inactiveImg = LB.imgB;
+    const img=d.images[ii];
+    LB.loader.classList.add('show');
+    LB.mainImg.onload=()=>LB.loader.classList.remove('show');
+    LB.mainImg.style.transition='none';
+    LB.mainImg.style.transform='translateX(0)';
+    LB.mainImg.style.opacity='1';
+    LB.mainImg.src=img.src;
 
-    showCurrent();
+    setCounterInstant(ii+1,d.images.length);
+    LB.descEl.textContent=img.desc||'';
+    LB.descEl.style.opacity=img.desc?'1':'0';
+    updateNav();
+
     LB.el.classList.add('open');
-    document.body.style.overflow = 'hidden';
-    preload();
+    document.body.style.overflow='hidden';
+    preloadAdjacent();
 }
 
 function closeLightbox(){
-    LB.open = false;
+    cancelAnim();
+    LB.open=false;
     LB.el.classList.remove('open');
-    document.body.style.overflow = '';
-    resetImgSlots();
+    document.body.style.overflow='';
+    resetImgs();
 }
 
-function resetImgSlots(){
-    [LB.imgA, LB.imgB].forEach(i => {
-        i.style.cssText = '';
-        i.src = '';
-        i.style.opacity = '0';
+function resetImgs(){
+    [LB.mainImg,LB.ghostImg].forEach(img=>{
+        img.style.cssText='';img.src='';
+        img.style.opacity='0';
+        delete img.dataset.peekSrc;
     });
     LB.loader.classList.remove('show');
 }
 
-// ════════════════════════════════════════
-//           LIGHTBOX — DISPLAY
-// ════════════════════════════════════════
-function showCurrent(){
-    const d = galleryData[LB.colIdx];
-    const img = d.images[LB.imgIdx];
-
-    LB.loader.classList.add('show');
-
-    LB.activeImg.onload = () => LB.loader.classList.remove('show');
-    LB.activeImg.style.transition = 'none';
-    LB.activeImg.style.transform  = 'translateX(0)';
-    LB.activeImg.style.opacity    = '1';
-    LB.activeImg.src = img.src;
-
-    LB.inactiveImg.style.opacity = '0';
-
-    setCounter(LB.imgIdx+1, d.images.length, true);
-    setDesc(img.desc, true);
-    updateNav();
-}
-
 function updateNav(){
-    const d = galleryData[LB.colIdx];
-    LB.prevBtn.classList.toggle('disabled', LB.imgIdx <= 0);
-    LB.nextBtn.classList.toggle('disabled', LB.imgIdx >= d.images.length-1);
+    const d=galleryData[LB.colIdx];
+    LB.prevBtn.classList.toggle('disabled',LB.imgIdx<=0);
+    LB.nextBtn.classList.toggle('disabled',LB.imgIdx>=d.images.length-1);
 }
 
-// ════════════════════════════════════════
-//        LIGHTBOX — NAVIGATE (SLIDE)
-// ════════════════════════════════════════
+// ════════════════ NAVIGATE — RAPID-FIRE SAFE ════════════════
 function navigateLB(dir){
-    if(LB.animating) return;
-    const d = galleryData[LB.colIdx];
-    const ni = LB.imgIdx + dir;
-    if(ni < 0 || ni >= d.images.length) return;
+    const d=galleryData[LB.colIdx];
+    const ni=LB.imgIdx+dir;
+    if(ni<0||ni>=d.images.length)return;
 
-    LB.animating = true;
-    const nImg = d.images[ni];
+    // ── zawsze anuluj poprzednią animację (rapid-fire) ──
+    cancelAnim();
 
-    const outgoing = LB.activeImg;
-    const incoming = LB.inactiveImg;
+    const nImg=d.images[ni];
+    LB.imgIdx=ni;
 
-    // ── INCOMING: natychmiast na środku, pod spodem ──
-    incoming.src              = nImg.src;
-    incoming.style.transition = 'none';
-    incoming.style.transform  = 'translateX(0)';
-    incoming.style.opacity    = '1';
-    incoming.style.zIndex     = '1';
+    // ── MAIN: natychmiast na środku, pod ghostem ──
+    LB.mainImg.style.transition='none';
+    LB.mainImg.style.transform='translateX(0)';
+    LB.mainImg.style.opacity='1';
+    LB.mainImg.style.zIndex='2';
+    LB.mainImg.src=nImg.src;
 
-    // ── OUTGOING: zjeżdża w bok (na wierzchu) ──
-    outgoing.style.zIndex     = '2';
-    const ease = `${SLIDE_MS}ms cubic-bezier(.22,.61,.36,1)`;
-    outgoing.style.transition = `transform ${ease}, opacity ${SLIDE_MS}ms ease`;
-    outgoing.style.transform  = `translateX(${-dir * 100}%)`;
-    outgoing.style.opacity    = '0';
+    // ── GHOST: speed-echo NAD mainem, z boku → centrum ──
+    LB.ghostImg.src=nImg.src;
+    LB.ghostImg.style.transition='none';
+    LB.ghostImg.style.transform=`translateX(${dir*70}%)`;
+    LB.ghostImg.style.opacity='0.2';
+    LB.ghostImg.style.zIndex='3';
+    LB.ghostImg.offsetHeight;                      // reflow
 
-    LB.imgIdx = ni;
-    animateCounter(ni+1, d.images.length);
-    animateDesc(nImg.desc);
+    LB.ghostImg.style.transition=
+        `transform ${SLIDE_MS}ms cubic-bezier(.22,.61,.36,1), `+
+        `opacity ${SLIDE_MS}ms ease`;
+    LB.ghostImg.style.transform='translateX(0)';
+    LB.ghostImg.style.opacity='0';
+
+    // ── UI ──
+    popCounter(ni+1,d.images.length);
+    LB.descEl.textContent=nImg.desc||'';
+    LB.descEl.style.opacity=nImg.desc?'1':'0';
     updateNav();
 
-    setTimeout(() => {
-        LB.activeImg   = incoming;
-        LB.inactiveImg = outgoing;
-        outgoing.style.transition = 'none';
-        outgoing.style.opacity    = '0';
-        outgoing.style.transform  = '';
-        outgoing.style.zIndex     = '';
-        incoming.style.zIndex     = '';
-        delete outgoing.dataset.peekSrc;
-        LB.animating = false;
+    animTimeout=setTimeout(()=>{
+        finishGhost();
         preloadAdjacent();
-    }, SLIDE_MS);
+    },SLIDE_MS);
 }
 
-// ════════════════════════════════════════
-//        COUNTER ANIMATION
-// ════════════════════════════════════════
-function setCounter(num, total, instant){
-    const el = LB.counterInner;
-    el.textContent = `${num} / ${total}`;
-    if(instant){
-        el.style.transition = 'none';
-        el.style.transform  = 'translateY(0)';
-        el.style.opacity    = '1';
+// ════════════════ ANIMATION CLEANUP ════════════════
+function cancelAnim(){
+    if(animTimeout){clearTimeout(animTimeout);animTimeout=null;}
+
+    // jeśli ghost wyświetla obraz (np. po swipe) — przenieś do main
+    if(LB.ghostImg.style.opacity==='1'&&LB.ghostImg.src){
+        LB.mainImg.src=LB.ghostImg.src;
     }
+
+    // reset main do stanu neutralnego
+    LB.mainImg.style.transition='none';
+    LB.mainImg.style.transform='translateX(0)';
+    LB.mainImg.style.opacity='1';
+    LB.mainImg.style.zIndex='';
+
+    finishGhost();
 }
 
-function animateCounter(num, total){
-    const el = LB.counterInner;
-    const half = SLIDE_MS / 2;
-
-    // slide out up
-    el.style.transition = `transform ${half}ms ease, opacity ${half}ms ease`;
-    el.style.transform  = 'translateY(-110%)';
-    el.style.opacity    = '0';
-
-    setTimeout(() => {
-        el.textContent = `${num} / ${total}`;
-        el.style.transition = 'none';
-        el.style.transform  = 'translateY(110%)';
-        el.style.opacity    = '0';
-
-        requestAnimationFrame(() => {
-            el.style.transition = `transform ${half}ms ease, opacity ${half}ms ease`;
-            el.style.transform  = 'translateY(0)';
-            el.style.opacity    = '1';
-        });
-    }, half);
+function finishGhost(){
+    LB.ghostImg.style.transition='none';
+    LB.ghostImg.style.opacity='0';
+    LB.ghostImg.style.transform='';
+    LB.ghostImg.style.zIndex='';
+    delete LB.ghostImg.dataset.peekSrc;
 }
 
-// ════════════════════════════════════════
-//        DESCRIPTION ANIMATION
-// ════════════════════════════════════════
-function setDesc(text, instant){
-    LB.descEl.textContent = text || '';
-    LB.descEl.style.opacity = text ? '1' : '0';
-    if(instant) LB.descEl.style.transition = 'none';
-    else        LB.descEl.style.transition = 'opacity 150ms ease';
+// ════════════════ COUNTER ════════════════
+function setCounterInstant(num,total){
+    if(counterRAF){cancelAnimationFrame(counterRAF);counterRAF=null;}
+    const el=LB.counterInner;
+    el.style.transition='none';
+    el.style.transform='translateY(0)';
+    el.style.opacity='1';
+    el.textContent=`${num} / ${total}`;
 }
 
-function animateDesc(text){
-    LB.descEl.style.transition = 'opacity 100ms ease';
-    LB.descEl.style.opacity = '0';
-    setTimeout(() => {
-        LB.descEl.textContent = text || '';
-        LB.descEl.style.opacity = text ? '1' : '0';
-    }, 110);
+function popCounter(num,total){
+    if(counterRAF){cancelAnimationFrame(counterRAF);counterRAF=null;}
+    const el=LB.counterInner;
+    el.textContent=`${num} / ${total}`;
+    el.style.transition='none';
+    el.style.transform='translateY(6px)';
+    el.style.opacity='0';
+
+    counterRAF=requestAnimationFrame(()=>{
+        el.style.transition='transform 90ms ease-out, opacity 90ms ease-out';
+        el.style.transform='translateY(0)';
+        el.style.opacity='1';
+        counterRAF=null;
+    });
 }
 
-// ════════════════════════════════════════
-//        PRELOAD ADJACENT
-// ════════════════════════════════════════
-function preload(){
-    const d = galleryData[LB.colIdx];
-    [-1, 1, 2].forEach(off => {
-        const i = LB.imgIdx + off;
-        if(i >= 0 && i < d.images.length){
-            const p = new Image();
-            p.src = d.images[i].src;
+// ════════════════ PRELOAD ════════════════
+function preloadAdjacent(){
+    const d=galleryData[LB.colIdx];
+    [-1,1,2,-2,3].forEach(off=>{
+        const i=LB.imgIdx+off;
+        if(i>=0&&i<d.images.length){
+            const p=new Image();p.src=d.images[i].src;
         }
     });
 }
 
-// ════════════════════════════════════════
-//        DRAG / SWIPE
-// ════════════════════════════════════════
+// ════════════════ DRAG / SWIPE ════════════════
 function setupDrag(){
-    const stage = LB.stage;
+    const stage=LB.stage;
 
-    stage.addEventListener('pointerdown', e => {
-        if(LB.animating || !LB.open) return;
-        LB.dragging   = true;
-        LB.dragStartX = e.clientX;
-        LB.dragDelta  = 0;
-        LB.dragPid    = e.pointerId;
+    stage.addEventListener('pointerdown',e=>{
+        if(!LB.open)return;
+        cancelAnim();
+        LB.dragging=true;
+        LB.dragStartX=e.clientX;
+        LB.dragDelta=0;
+        LB.dragPid=e.pointerId;
         stage.setPointerCapture(e.pointerId);
-        LB.activeImg.style.transition = 'none';
+        LB.mainImg.style.transition='none';
     });
 
-    stage.addEventListener('pointermove', e => {
-        if(!LB.dragging || e.pointerId !== LB.dragPid) return;
-        let delta = e.clientX - LB.dragStartX;
+    stage.addEventListener('pointermove',e=>{
+        if(!LB.dragging||e.pointerId!==LB.dragPid)return;
+        let delta=e.clientX-LB.dragStartX;
+        const d=galleryData[LB.colIdx];
 
-        // edge resistance
-        const d = galleryData[LB.colIdx];
-        if((LB.imgIdx <= 0 && delta > 0) ||
-           (LB.imgIdx >= d.images.length-1 && delta < 0)){
-            delta *= 0.15;
+        // opór na krańcach
+        if((LB.imgIdx<=0&&delta>0)||
+           (LB.imgIdx>=d.images.length-1&&delta<0)){
+            delta*=0.15;
         }
-        LB.dragDelta = delta;
-        LB.activeImg.style.transform = `translateX(${delta}px)`;
+        LB.dragDelta=delta;
+        LB.mainImg.style.transform=`translateX(${delta}px)`;
 
-        // peek next / prev
-        const dir = delta < 0 ? 1 : -1;
-        const pi  = LB.imgIdx + dir;
-        if(pi >= 0 && pi < d.images.length){
-            const inc = LB.inactiveImg;
-            if(inc.dataset.peekSrc !== d.images[pi].src){
-                inc.src = d.images[pi].src;
-                inc.dataset.peekSrc = d.images[pi].src;
+        // peek next/prev
+        const dir=delta<0?1:-1;
+        const pi=LB.imgIdx+dir;
+        if(pi>=0&&pi<d.images.length){
+            if(LB.ghostImg.dataset.peekSrc!==d.images[pi].src){
+                LB.ghostImg.src=d.images[pi].src;
+                LB.ghostImg.dataset.peekSrc=d.images[pi].src;
             }
-            inc.style.transition = 'none';
-            inc.style.opacity    = '1';
-            inc.style.transform  = `translateX(${dir * stage.offsetWidth + delta}px)`;
+            LB.ghostImg.style.transition='none';
+            LB.ghostImg.style.opacity='1';
+            LB.ghostImg.style.transform=
+                `translateX(${dir*stage.offsetWidth+delta}px)`;
         }
     });
 
-    stage.addEventListener('pointerup', e => {
-        if(!LB.dragging || e.pointerId !== LB.dragPid) return;
-        LB.dragging = false;
+    stage.addEventListener('pointerup',e=>{
+        if(!LB.dragging||e.pointerId!==LB.dragPid)return;
+        LB.dragging=false;
+        const sw=stage.offsetWidth;
+        const abs=Math.abs(LB.dragDelta);
 
-        const sw = stage.offsetWidth;
-        const absDelta = Math.abs(LB.dragDelta);
+        if(abs<4){closeLightbox();return;}      // tap
 
-        // tap → close
-        if(absDelta < 4){
-            closeLightbox();
-            return;
-        }
-
-        const d = galleryData[LB.colIdx];
-
-        // threshold crossed → complete swipe
-        if(absDelta > sw * SWIPE_THRESHOLD){
-            const dir = LB.dragDelta < 0 ? 1 : -1;
-            const ni  = LB.imgIdx + dir;
-            if(ni >= 0 && ni < d.images.length){
-                completeSwipe(dir, ni, d);
-                return;
+        const d=galleryData[LB.colIdx];
+        if(abs>sw*SWIPE_THRESHOLD){
+            const dir=LB.dragDelta<0?1:-1;
+            const ni=LB.imgIdx+dir;
+            if(ni>=0&&ni<d.images.length){
+                completeSwipe(dir,ni,d);return;
             }
         }
-
-        // snap back
         snapBack();
     });
 
-    stage.addEventListener('pointercancel', () => {
-        if(LB.dragging){ LB.dragging = false; snapBack(); }
+    stage.addEventListener('pointercancel',()=>{
+        if(LB.dragging){LB.dragging=false;snapBack();}
     });
 }
 
-function completeSwipe(dir, ni, d){
-    LB.animating = true;
-    const sw = LB.stage.offsetWidth;
+function completeSwipe(dir,ni,d){
+    const nImg=d.images[ni];
+    LB.imgIdx=ni;
 
-    // ── INCOMING: teleport na środek ──
-    LB.inactiveImg.style.transition = 'none';
-    LB.inactiveImg.style.transform  = 'translateX(0)';
-    LB.inactiveImg.style.opacity    = '1';
-    LB.inactiveImg.style.zIndex     = '1';
+    // ghostImg ma już załadowany nowy obraz (z peek)
+    // → snap na środek, nad main
+    LB.ghostImg.style.transition='none';
+    LB.ghostImg.style.transform='translateX(0)';
+    LB.ghostImg.style.opacity='1';
+    LB.ghostImg.style.zIndex='3';
 
-    // ── OUTGOING: dokańcza zjazd ──
-    LB.activeImg.style.zIndex       = '2';
-    const ease = `${SLIDE_MS}ms cubic-bezier(.22,.61,.36,1)`;
-    LB.activeImg.style.transition   = `transform ${ease}, opacity ${SLIDE_MS}ms ease`;
-    LB.activeImg.style.transform    = `translateX(${-dir * sw}px)`;
-    LB.activeImg.style.opacity      = '0';
+    // stary main wyjeżdża
+    const ease=`${SLIDE_MS}ms cubic-bezier(.22,.61,.36,1)`;
+    LB.mainImg.style.zIndex='1';
+    LB.mainImg.style.transition=`transform ${ease}, opacity ${SLIDE_MS}ms ease`;
+    LB.mainImg.style.transform=`translateX(${-dir*LB.stage.offsetWidth}px)`;
+    LB.mainImg.style.opacity='0';
 
-    LB.imgIdx = ni;
-    animateCounter(ni+1, d.images.length);
-    animateDesc(d.images[ni].desc);
+    popCounter(ni+1,d.images.length);
+    LB.descEl.textContent=nImg.desc||'';
+    LB.descEl.style.opacity=nImg.desc?'1':'0';
     updateNav();
 
-    setTimeout(() => {
-        const tmp = LB.activeImg;
-        LB.activeImg   = LB.inactiveImg;
-        LB.inactiveImg = tmp;
+    animTimeout=setTimeout(()=>{
+        // przenieś obraz do main, resetuj ghost
+        LB.mainImg.style.transition='none';
+        LB.mainImg.src=nImg.src;
+        LB.mainImg.style.transform='translateX(0)';
+        LB.mainImg.style.opacity='1';
+        LB.mainImg.style.zIndex='';
 
-        tmp.style.transition = 'none';
-        tmp.style.opacity    = '0';
-        tmp.style.transform  = '';
-        tmp.style.zIndex     = '';
-        LB.activeImg.style.zIndex = '';
-        delete tmp.dataset.peekSrc;
+        LB.ghostImg.style.opacity='0';
+        LB.ghostImg.style.zIndex='';
+        LB.ghostImg.style.transform='';
+        delete LB.ghostImg.dataset.peekSrc;
 
-        LB.animating = false;
+        animTimeout=null;
         preloadAdjacent();
-    }, SLIDE_MS);
+    },SLIDE_MS);
 }
 
 function snapBack(){
-    const ease = `${SLIDE_MS}ms ease`;
-    LB.activeImg.style.transition   = `transform ${ease}`;
-    LB.activeImg.style.transform    = 'translateX(0)';
-    LB.inactiveImg.style.transition = `opacity ${ease}`;
-    LB.inactiveImg.style.opacity    = '0';
+    const ease=`${SLIDE_MS}ms ease`;
+    LB.mainImg.style.transition=`transform ${ease}`;
+    LB.mainImg.style.transform='translateX(0)';
+    LB.ghostImg.style.transition=`opacity ${ease}`;
+    LB.ghostImg.style.opacity='0';
 }
 
-// ════════════════════════════════════════
-//        KEYBOARD
-// ════════════════════════════════════════
+// ════════════════ KEYBOARD ════════════════
 function onKey(e){
-    if(!LB.open) return;
+    if(!LB.open)return;
     switch(e.key){
-        case 'ArrowLeft':  e.preventDefault(); navigateLB(-1); break;
-        case 'ArrowRight': e.preventDefault(); navigateLB(1);  break;
-        case 'Escape':     closeLightbox(); break;
+        case'ArrowLeft': e.preventDefault();navigateLB(-1);break;
+        case'ArrowRight':e.preventDefault();navigateLB(1);break;
+        case'Escape':    closeLightbox();break;
     }
 }
 </script>
