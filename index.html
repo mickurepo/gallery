@@ -418,7 +418,7 @@ async function fetchFolderData(folder) {
 
     const path = CONFIG.basePath ? `${CONFIG.basePath}/${folder}` : folder;
     const apiPath = path.split('/').map(encodeURIComponent).join('/');
-    const url = `https://api.github.com/repos/${CONFIG.githubUser}/${CONFIG.githubRepo}s/${apiPath}?ref=${CONFIG.branch}`;
+    const url = `https://api.github.com/repos/${CONFIG.githubUser}/${CONFIG.githubRepo}/${apiPath}?ref=${CONFIG.branch}`;
 
     const res = await fetch(url);
     if (!res.ok) throw new Error(`Brak folderu: ${folder}`);
