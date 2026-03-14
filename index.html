@@ -1,888 +1,719 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Galeria</title>
-<style>
-/* ═══════════ RESET ═══════════ */
-*{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{
-    background:#434343;
-    color:#fff;
-    font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
-    min-height:100vh;
-}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galeria z Filmami</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-/* ═══════════ WELCOME SCREEN ═══════════ */
-#message{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    flex-direction:column;
-    min-height:100vh;
-    text-align:center;
-    padding:40px 20px;
-    background:#2a2a30;
-    position:relative;
-    overflow:hidden;
-}
-.glow{
-    position:absolute;
-    width:500px;height:500px;
-    border-radius:50%;
-    background:radial-gradient(circle,rgba(79,195,247,.08) 0%,transparent 70%);
-    animation:pulseGlow 4s ease-in-out infinite;
-    pointer-events:none;
-}
-.glow:nth-child(2){
-    width:350px;height:350px;
-    animation-delay:-2s;
-    background:radial-gradient(circle,rgba(160,120,255,.06) 0%,transparent 70%);
-}
-@keyframes pulseGlow{
-    0%,100%{transform:scale(.8);opacity:.3}
-    50%{transform:scale(1.6);opacity:1}
-}
-#message h2{
-    font-size:2.5em;
-    margin-bottom:24px;
-    position:relative;z-index:1;
-    animation:fadeUp .8s ease both;
-}
-#message p{
-    color:#888;
-    font-size:1.05em;
-    margin-bottom:14px;
-    position:relative;z-index:1;
-    animation:fadeUp .8s ease both;
-    animation-delay:.15s;
-}
-#message code{
-    display:inline-block;
-    background:#16162a;
-    padding:14px 24px;
-    border-radius:10px;
-    color:#4fc3f7;
-    font-size:.92em;
-    word-break:break-all;
-    position:relative;z-index:1;
-    animation:fadeUp .8s ease both;
-    animation-delay:.3s;
-    border:1px solid rgba(79,195,247,.15);
-}
-@keyframes fadeUp{
-    from{opacity:0;transform:translateY(20px)}
-    to{opacity:1;transform:translateY(0)}
-}
+        body {
+            background: rgb(67, 67, 67);
+            color: #fff;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
 
-/* ═══════════ GALLERY COLUMNS ═══════════ */
-#gallery{
-    display:flex;
-    width:100%;
-    min-height:100vh;
-}
-.column{
-    flex:1;
-    display:flex;
-    flex-direction:column;
-    min-width:0;
-}
-.column+.column{
-    border-left:1px solid rgba(255,255,255,.04);
-}
-.column-header{
-    text-align:center;
-    padding:16px 10px;
-    font-size:.82em;
-    font-weight:700;
-    text-transform:uppercase;
-    letter-spacing:2.5px;
-    background:rgba(0,0,0,.22);
-    border-bottom:2px solid rgba(255,255,255,.04);
-    position:sticky;
-    top:0;z-index:10;
-    backdrop-filter:blur(14px);
-    -webkit-backdrop-filter:blur(14px);
-    color:rgba(255,255,255,.7);
-}
+        
 
-/* ── Image wrapper ── */
-.col-img-wrap{
-    margin:8px 10px;
-    overflow:hidden;
-    /*border-radius:8px;*/
-    box-shadow:
-        0 2px 8px rgba(0,0,0,.25),
-        0 4px 20px rgba(0,0,0,.15);
-    transition:box-shadow .35s ease,transform .35s cubic-bezier(.25,.46,.45,.94);
-    cursor:pointer;
-    position:relative;
-}
-.col-img-wrap:hover{
-    box-shadow:
-        0 8px 30px rgba(0,0,0,.45),
-        0 14px 50px rgba(0,0,0,.25);
-    transform:scale(1.025);
-    z-index:5;
-}
-.col-img-wrap img{
-    width:100%;
-    display:block;
-    transition:transform .4s cubic-bezier(.25,.46,.45,.94);
-    opacity:0;
-}
-.col-img-wrap img.loaded{
-    opacity:1;
-    transition:
-        opacity .5s ease,
-        transform .4s cubic-bezier(.25,.46,.45,.94);
-}
-.col-img-wrap:hover img{
-    transform:scale(1.07);
-}
+        /* ---------- GALERIA ---------- */
+        #gallery {
+            display: flex;
+            width: 100%;
+            padding: 15px;
+            gap: 15px;
+        }
 
-/* ── Status / spinner ── */
-.status{
-    text-align:center;
-    padding:50px 15px;
-    font-size:.88em;
-    color:rgba(255,255,255,.25);
-}
-.status.error{color:#e74c3c}
-.spinner{
-    margin:60px auto;
-    width:30px;height:30px;
-    border:3px solid rgba(255,255,255,.08);
-    border-top-color:#4fc3f7;
-    border-radius:50%;
-    animation:spin .7s linear infinite;
-}
-@keyframes spin{to{transform:rotate(360deg)}}
+        .column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            gap: 20px;
+        }
 
-/* ═══════════ LIGHTBOX ═══════════ */
-#lightbox{
-    position:fixed;inset:0;
-    z-index:1000;
-    display:none;
-    flex-direction:column;
-    background:rgba(10,10,14,.97);
-    backdrop-filter:blur(40px);
-    -webkit-backdrop-filter:blur(40px);
-}
-#lightbox.open{display:flex}
+        .column-header {
+            text-align: center;
+            padding: 14px 8px;
+            font-size: 1.1em;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            background: rgba(30, 30, 30, 0.6);
+            /*border-radius: 8px;*/
+            backdrop-filter: blur(5px);
+            position: sticky;
+            top: 15px;
+            z-index: 10;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
 
-.lb-header{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:14px 22px;
-    flex-shrink:0;
-    border-bottom:1px solid rgba(255,255,255,.05);
-}
-.lb-folder{
-    font-size:.85em;
-    font-weight:700;
-    text-transform:uppercase;
-    letter-spacing:2.5px;
-    color:rgba(255,255,255,.45);
-}
-.lb-close{
-    background:none;border:none;
-    color:rgba(255,255,255,.4);
-    font-size:2.2em;
-    cursor:pointer;
-    padding:0 6px;
-    line-height:1;
-    transition:color .2s,transform .2s;
-    border-radius:4px;
-}
-.lb-close:hover{color:#fff;transform:scale(1.15)}
+        .img-wrapper {
+            position: relative; /* Wymagane dla pozycjonowania SVG */
+            background: rgb(85, 85, 85);
+            /*padding: 8px;*/
+            /*border-radius: 12px;*/
+            box-shadow: 3px 0px 10px 0px rgba(40, 40, 40, 0.8);
+            overflow: hidden;
+            cursor: pointer;
+            transition: box-shadow 0.3s ease, transform 0.3s ease;
 
-.lb-body{
-    flex:1;
-    display:flex;
-    align-items:stretch;
-    overflow:hidden;
-    position:relative;
-}
-.lb-nav{
-    width:64px;
-    flex-shrink:0;
-    background:none;border:none;
-    color:rgba(255,255,255,.25);
-    font-size:2.8em;
-    cursor:pointer;
-    transition:color .2s,background .2s;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    user-select:none;
-    -webkit-user-select:none;
-}
-.lb-nav:hover{
-    color:rgba(255,255,255,.7);
-    background:rgba(255,255,255,.03);
-}
-.lb-nav.disabled{
-    opacity:.08;
-    cursor:default;
-    pointer-events:none;
-}
-.lb-stage{
-    flex:1;
-    position:relative;
-    overflow:hidden;
-    touch-action:none;
-    user-select:none;
-    -webkit-user-select:none;
-}
-.lb-img{
-    position:absolute;
-    inset:0;
-    width:100%;height:100%;
-    object-fit:contain;
-    will-change:transform,opacity;
-    pointer-events:none;
-    opacity:0;
-}
-.lb-loader{
-    position:absolute;inset:0;
-    display:none;
-    align-items:center;
-    justify-content:center;
-    z-index:2;
-}
-.lb-loader.show{display:flex}
-.lb-loader .spinner{
-    margin:0;
-    width:28px;height:28px;
-    border-width:2px;
-}
+        }
 
-.lb-footer{
-    flex-shrink:0;
-    padding:10px 22px 18px;
-    text-align:center;
-    border-top:1px solid rgba(255,255,255,.05);
-}
-.lb-counter{
-    font-size:.88em;
-    color:rgba(255,255,255,.4);
-    margin-bottom:4px;
-    overflow:hidden;
-    height:1.4em;
-    font-variant-numeric:tabular-nums;
-}
-.lb-counter-inner{
-    display:inline-block;
-    transition:transform 80ms ease,opacity 80ms ease;
-}
-.lb-desc{
-    font-size:.84em;
-    color:rgba(255,255,255,.35);
-    max-width:650px;
-    margin:0 auto;
-    line-height:1.6;
-    transition:opacity 150ms ease;
-    min-height:1.4em;
-}
+        .img-wrapper img, .img-wrapper video {
+            width: 100%;
+            display: block;
+            /*border-radius: 6px;*/
+            opacity: 0;
+            transition: opacity 0.5s ease, transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .img-wrapper img.loaded, .img-wrapper video.loaded {
+            opacity: 1;
+        }
 
-/* ═══════════ MOBILE ═══════════ */
-@media(max-width:700px){
-    .lb-nav{width:44px;font-size:2em}
-    .lb-header{padding:10px 14px}
-    .lb-footer{padding:8px 14px 14px}
-    .column-header{padding:12px 6px;font-size:.72em;letter-spacing:1.5px}
-    .col-img-wrap{margin:5px 6px}
-    #message h2{font-size:1.8em}
+        .img-wrapper:hover {
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.6);
+        }
+        .img-wrapper:hover img, .img-wrapper:hover video {
+            transform: scale(1.06);
+        }
+
+        /* Ikonka Play dla filmów w kolumnach */
+        .play-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100px;
+            height: 100px;
+            pointer-events: none; /* Kliknięcie przechodzi przez ikonę do wrappera */
+            opacity: 0.6;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        .img-wrapper:hover .play-icon {
+            transform: translate(-50%, -50%) scale(1.15);
+            opacity: 1;
+        }
+
+        /* ---------- LIGHTBOX ---------- */
+        #lightbox {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 15, 15, 0.94);
+            z-index: 1000;
+            flex-direction: column;
+        }
+        #lightbox.open { display: flex; }
+
+        .lb-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 25px;
+            background: rgba(0, 0, 0, 0.5);
+            font-size: 1.2em;
+            z-index: 60;
+        }
+        .lb-folder { font-weight: bold; color: #4fc3f7; }
+        .lb-counter { 
+            font-family: monospace; 
+            font-size: 1.2em; 
+            background: #333; 
+            padding: 5px 12px; 
+            /*border-radius: 20px;*/
+        }
+        .lb-close { cursor: pointer; font-size: 2em; line-height: 1; color: #bbb; z-index: 60;}
+        .lb-close:hover { color: #fff; }
+
+        .lb-body {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .lb-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: none;
+            font-size: 2em;
+            padding: 20px 15px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background 0.2s;
+            z-index: 50; 
+        }
+        .lb-nav:hover { background: rgba(255,255,255,0.3); }
+        .lb-nav.prev { left: 20px; }
+        .lb-nav.next { right: 20px; }
+
+        /* ---------- NOWA LOGIKA WARSTW W LIGHTBOXIE ---------- */
+        
+        #lb-center-wrapper {
+            position: relative;
+            z-index: 40; /* ZAWSZE NA WIERZCHU */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .lb-media {
+            max-width: 85vw;
+            max-height: 90vh;
+            object-fit: contain;
+            border-radius: 1px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+        }
+
+        .lb-clone {
+            position: absolute; 
+            max-width: 85vw;
+            max-height: 85vh;
+            object-fit: contain;
+            border-radius: 8px;
+            pointer-events: none; 
+            transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.5s ease;
+            z-index: 20; 
+            /* NOWE: Duchy są w 70% przezroczyste podczas ruchu */
+            opacity: 0.2; 
+        }
+
+        .lb-footer {
+            min-height: 80px;
+            padding: 20px;
+            text-align: center;
+            font-size: 1.1em;
+            background: rgba(0, 0, 0, 0.5);
+            color: #ddd;
+            z-index: 60;
+        }
+        .lb-desc-loading {
+            color: #888; font-style: italic; font-size: 0.9em;
+            video::-webkit-media-controls-panel {
+            display: flex !important;
+            opacity: 1 !important;
+            visibility: visible !important;
 }
-@media(max-width:400px){
-    .lb-nav{width:32px;font-size:1.6em}
-}
-</style>
+        }
+
+        .spinner {
+            margin: 60px auto;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #444;
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+
+
+
+
+
+/* ---------- EKRAN POWITALNY ---------- */
+        #message {
+            /*position: fixed;*/
+            inset: 0;
+            background: rgb(0, 0, 0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            /*padding: 20px;*/
+            z-index: 50;
+            transition: opacity 0.3s ease;
+        }
+
+        .pulse-text {
+            font-size: 2.4em;
+            margin-bottom: 20px;
+            color: #fff;
+            animation: pulse-glow 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse-glow {
+            0% { text-shadow: 0 0 5px rgba(255, 255, 255, 0.2); transform: scale(1); }
+            50% { text-shadow: 0 0 25px rgba(255, 255, 255, 0.8); transform: scale(1.02); }
+            100% { text-shadow: 0 0 5px rgba(255, 255, 255, 0.2); transform: scale(1); }
+        }
+
+        #local-picker-container {
+            display: none;
+            margin-top: 25px;
+            background: rgba(0,0,0,0.2);
+            padding: 20px;
+            /*border-radius: 12px;*/
+            border: 1px dashed #777;
+        }
+
+
+          /* Kontener wyrównujący loader na środku */
+  .loader-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: sans-serif;
+    color: #555;
+  }
+
+  /* Styl samego spinnera */
+  .loader {
+    border: 8px solid #f3f3f3; /* Jasne tło kręgu */
+    border-top: 8px solid #3498db; /* Kolor elementu kręcącego się */
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 10px;
+    position: absolute;
+
+  /* Animacja obrotu */
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+    </style>
 </head>
 <body>
 
-<!-- ═══════════ WELCOME SCREEN ═══════════ -->
-<div id="message"></div>
+<div id="message">
 
-<!-- ═══════════ GALLERY ═══════════ -->
+
+    <div class="loader-container">
+      <div class="loader"></div>
+      <img src="images/welcome.png">
+    </div>
+
+
+
+    <div class="pulse-text" id="msg-title">📷 Galeria</div>
+    
+    <div id="msg-content" style="display:none;">
+        <p>Dodaj nazwy folderów po <strong>#</strong> w adresie URL:</p>
+        <code style="background: #222; padding: 10px; border-radius: 6px; display: block; margin: 15px 0;">
+            #folder1,folder2
+        </code>
+    </div>
+
+    <div id="local-picker-container">
+        <p style="margin-bottom: 12px; font-weight: bold; color: #4fc3f7;">TRYB TESTÓW LOKALNYCH</p>
+        <p style="font-size: 0.9em; color:#ddd; margin-bottom: 15px;">
+            Wybierz poniżej folder główny (zawierający podfoldery),<br>aby załadować zdjęcia, <b>filmy</b> i opisy z dysku.
+        </p>
+        <input type="file" id="dir-picker" webkitdirectory directory multiple style="background:#222; padding:10px; border-radius:5px; color:#fff; cursor:pointer;">
+    </div>
+
+    <div id="msg-spinner" class="spinner"></div>
+</div>
+
 <div id="gallery"></div>
 
-<!-- ═══════════ LIGHTBOX ═══════════ -->
+<!-- LIGHTBOX -->
 <div id="lightbox">
     <div class="lb-header">
-        <span class="lb-folder"></span>
-        <button class="lb-close" onclick="closeLightbox()" title="Zamknij (Esc)">&times;</button>
+        <div class="lb-folder" id="lb-folder">Nazwa Folderu</div>
+        <div class="lb-counter" id="lb-counter">1/5</div>
+        <div class="lb-close" onclick="closeLightbox()">&times;</div>
     </div>
-    <div class="lb-body">
-        <button class="lb-nav lb-nav-prev" onclick="navigateLB(-1)">&#8249;</button>
-        <div class="lb-stage" id="lb-stage">
-            <img class="lb-img lb-img-a" alt="">
-            <img class="lb-img lb-img-b" alt="">
-            <div class="lb-loader"><div class="spinner"></div></div>
-        </div>
-        <button class="lb-nav lb-nav-next" onclick="navigateLB(1)">&#8250;</button>
+    
+    <div class="lb-body" id="lb-body">
+        <button class="lb-nav prev" onclick="changeImage(-1)">&#10094;</button>
+        <!-- Zmieniony kontener centralny - przyjmuje filmy i zdjęcia -->
+        <div id="lb-center-wrapper"></div>
+        <button class="lb-nav next" onclick="changeImage(1)">&#10095;</button>
     </div>
-    <div class="lb-footer">
-        <div class="lb-counter"><span class="lb-counter-inner"></span></div>
-        <div class="lb-desc"></div>
-    </div>
+
+    <div class="lb-footer" id="lb-desc"></div>
 </div>
 
 <script>
-// ════════════════════════════════════════════════════════════
-//    K O N F I G U R A C J A   —   ZMIEŃ TUTAJ ↓↓↓
-// ════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════
+//               K O N F I G U R A C J A
+// ═══════════════════════════════════════════════
 const CONFIG = {
-
-    // ── TRYB ──────────────────────────────────
-    //  'github'  →  pobiera listę plików z GitHub API
-    //  'local'   →  pobiera z lokalnego serwera
-    //                (python3 -m http.server 8000)
-    mode: 'github',   // ← ZMIEŃ NA 'local' DO TESTÓW
-
-    // ── GITHUB (tylko gdy mode = 'github') ────
-    githubUser : 'mickurepo',   // ← twój login
-    githubRepo : 'gallery',      // ← nazwa repo
-    branch     : 'dev',           // ← branch
-
-    // ── LOCAL (tylko gdy mode = 'local') ──────
-    //  ścieżka do katalogu z folderami
-    //  '.'  = ten sam katalog co index.html
-    localBase  : '.',
-
-    // ── WSPÓLNE ───────────────────────────────
-    //  prefix jeśli foldery NIE są w rootcie repo
-    //  np. 'images'  →  repo/images/folder1/...
-    //  ''  →  repo/folder1/...
-    basePath   : 'images',
+    useLocalMock : false, // TRUE dla testów na dysku, FALSE dla GitHuba
+    githubUser : 'mickurepo',   
+    githubRepo : 'gallery',      
+    branch     : 'dev',           
+    basePath   : 'images'                
 };
-//
-//  ⚠ GitHub API: 60 req/h bez tokena.
-//    Przy wielu testach możesz trafić na limit.
-//    W trybie 'local' limitu nie ma.
-//
-// ════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════
 
-const IMG_EXT = new Set([
-    'jpg','jpeg','png','gif','webp','bmp','svg','avif','tiff','ico'
-]);
-const SLIDE_MS = 140;          // ← szybkość animacji slide (ms)
-const SWIPE_THRESHOLD = 0.12;  // % szerokości stage = min. swipe
+// Dodana obsługa rozszerzeń filmowych
+const MEDIA_EXT = new Set(['jpg','jpeg','png','gif','webp','mp4','webm','ogg','mov']);
+const VIDEO_EXT = new Set(['mp4','webm','ogg','mov']);
 
-// ── Gallery data ──
-let galleryData = [];  // [ {folder, images:[{src,name,desc}]} ]
+let currentColumnIndex = 0;
+let currentImageIndex = 0;
+let galleryData = []; 
+let descCache = {};   
+let descLoadId = 0; 
+let localFileSystem = {}; 
 
-// ── Lightbox state ──
-const LB = {
-    open: false,
-    colIdx: -1,
-    imgIdx: -1,
-    animating: false,
-    // DOM (filled on init)
-    el:null, imgA:null, imgB:null,
-    activeImg:null, inactiveImg:null,
-    loader:null, counterInner:null,
-    descEl:null, folderEl:null,
-    prevBtn:null, nextBtn:null, stage:null,
-    // Drag
-    dragging:false, dragStartX:0, dragDelta:0, dragPid:null,
-};
+function getFolders() {
+    const hash = window.location.hash.slice(1);
+    if (!hash) return [];
+    return hash.split(',').map(f => decodeURIComponent(f.trim())).filter(Boolean);
+}
 
-// ════════════════════════════════════════
-//              INIT
-// ════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', () => {
-    LB.el           = document.getElementById('lightbox');
-    LB.imgA         = LB.el.querySelector('.lb-img-a');
-    LB.imgB         = LB.el.querySelector('.lb-img-b');
-    LB.activeImg    = LB.imgA;
-    LB.inactiveImg  = LB.imgB;
-    LB.loader       = LB.el.querySelector('.lb-loader');
-    LB.counterInner = LB.el.querySelector('.lb-counter-inner');
-    LB.descEl       = LB.el.querySelector('.lb-desc');
-    LB.folderEl     = LB.el.querySelector('.lb-folder');
-    LB.prevBtn      = LB.el.querySelector('.lb-nav-prev');
-    LB.nextBtn      = LB.el.querySelector('.lb-nav-next');
-    LB.stage        = document.getElementById('lb-stage');
+// Lokalny picker z dysku
+document.getElementById('dir-picker').addEventListener('change', (e) => {
+    const files = e.target.files;
+    localFileSystem = {};
+    
+    for (let file of files) {
+        const parts = file.webkitRelativePath.split('/');
+        if (parts.length >= 2) {
+            const folderName = parts[parts.length - 2]; 
+            const fileName = file.name;
+            const ext = fileName.split('.').pop().toLowerCase();
+            const baseName = fileName.substring(0, fileName.lastIndexOf('.')).toLowerCase();
 
-    setupDrag();
-    document.addEventListener('keydown', onKey);
-    window.addEventListener('hashchange', render);
-    render();
+            if (!localFileSystem[folderName]) {
+                localFileSystem[folderName] = { media: [], txts: {} };
+            }
+
+            if (MEDIA_EXT.has(ext)) {
+                localFileSystem[folderNtame].media.push({ file, isVideo: VIDEO_EXT.has(ext) });
+            } else if (ext === 'txt') {
+                localFileSystem[folderName].txts[baseName] = file;
+            }
+        }
+    }
+    render(); 
 });
 
-// ════════════════════════════════════════
-//           URL → FOLDERS
-// ════════════════════════════════════════
-function getFolders(){
-    const h = location.hash.slice(1);
-    if(!h) return [];
-    return h.split(',').map(f=>decodeURIComponent(f.trim())).filter(Boolean);
-}
+async function fetchFolderData(folder) {
+    if (CONFIG.useLocalMock) {
+        if (!localFileSystem[folder]) throw new Error(`Brak folderu "${folder}".`);
+        const folderData = localFileSystem[folder];
+        
+        // folderData.media.sort((a, b) => a.file.name.localeCompare(b.file.name, undefined, { numeric: true }));
 
-// ════════════════════════════════════════
-//           FETCH IMAGE LIST
-// ════════════════════════════════════════
-async function fetchImages(folder){
-    return CONFIG.mode==='local' ? fetchLocal(folder) : fetchGH(folder);
-}
+        return folderData.media.map(item => {
+            const baseName = item.file.name.substring(0, item.file.name.lastIndexOf('.')).toLowerCase();
+            const txtFile = folderData.txts[baseName];
+            return {
+                src: URL.createObjectURL(item.file), 
+                txtUrl: txtFile ? URL.createObjectURL(txtFile) : null,
+                isVideo: item.isVideo
+            };
+        });
+    }
 
-async function fetchGH(folder){
-    const p = CONFIG.basePath ? `${CONFIG.basePath}/${folder}` : folder;
-    const encoded = p.split('/').map(encodeURIComponent).join('/');
-    const url = `https://api.github.com/repos/${CONFIG.githubUser}/${CONFIG.githubRepo}/contents/${encoded}?ref=${CONFIG.branch}`;
-    const r = await fetch(url);
-    if(!r.ok) throw new Error(`Folder „${folder}" — ${r.status}`);
-    const files = await r.json();
-    if(!Array.isArray(files)) throw new Error(`„${folder}" nie jest folderem`);
-    return files
-        .filter(f=>f.type==='file'&&IMG_EXT.has(f.name.split('.').pop().toLowerCase()))
-        .sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true}))
-        .map(f=>({name:f.name, src:f.download_url}));
-}
+    const path = CONFIG.basePath ? `${CONFIG.basePath}/${folder}` : folder;
+    const apiPath = path.split('/').map(encodeURIComponent).join('/');
+    const url = `https://api.github.com/repos/${CONFIG.githubUser}/${CONFIG.githubRepo}s/${apiPath}?ref=${CONFIG.branch}`;
 
-async function fetchLocal(folder){
-    const base = `${CONFIG.localBase}/${folder}`;
-    const r = await fetch(`${base}/_files.json`);
-    if(!r.ok) throw new Error(`Brak ${folder}/_files.json`);
-    const files = await r.json();
-    return files
-        .filter(f=>IMG_EXT.has(f.split('.').pop().toLowerCase()))
-        .sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}))
-        .map(f=>({name:f, src:`${base}/${f}`}));
-}
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Brak folderu: ${folder}`);
 
-async function fetchDescs(folder){
-    try{
-        let url;
-        if(CONFIG.mode==='local'){
-            url = `${CONFIG.localBase}/${folder}/descriptions.json`;
-        } else {
-            const p = CONFIG.basePath ? `${CONFIG.basePath}/${folder}` : folder;
-            url = `https://raw.githubusercontent.com/${CONFIG.githubUser}/${CONFIG.githubRepo}/${CONFIG.branch}/${p}/descriptions.json`;
+    const files = await res.json();
+    const txtFiles = {};
+    
+    files.forEach(f => {
+        if (f.name.toLowerCase().endsWith('.txt')) {
+            const baseName = f.name.substring(0, f.name.lastIndexOf('.')).toLowerCase();
+            txtFiles[baseName] = f.download_url;
         }
-        const r = await fetch(url);
-        if(!r.ok) return {};
-        return await r.json();
-    } catch{ return {}; }
+    });
+
+    return files
+        .filter(f => f.type === 'file' && MEDIA_EXT.has(f.name.split('.').pop().toLowerCase()))
+        .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
+        .map(f => {
+            const ext = f.name.split('.').pop().toLowerCase();
+            const baseName = f.name.substring(0, f.name.lastIndexOf('.')).toLowerCase();
+            return { 
+                src: f.download_url, 
+                txtUrl: txtFiles[baseName] || null,
+                isVideo: VIDEO_EXT.has(ext)
+            };
+        });
 }
 
-// ════════════════════════════════════════
-//           RENDER GALLERY
-// ════════════════════════════════════════
-async function render(){
+async function render() {
     const folders = getFolders();
-    const msgEl   = document.getElementById('message');
-    const galEl   = document.getElementById('gallery');
+    const msgEl = document.getElementById('message');
+    const msgContent = document.getElementById('msg-content');
+    const msgSpinner = document.getElementById('msg-spinner');
+    const localPicker = document.getElementById('local-picker-container');
+    const galEl = document.getElementById('gallery');
 
     galEl.innerHTML = '';
     galleryData = [];
 
-    // ── welcome screen ──
-    if(!folders.length){
-        msgEl.style.display = '';
-        msgEl.innerHTML = `
-            <div class="glow"></div>
-            <div class="glow"></div>
-            <h2>📷 Galeria</h2>
-            <p>Podaj foldery po <strong>#</strong> w adresie URL:</p>
-            <code>${location.origin+location.pathname}#folder1,folder2,folder3</code>
-            <p style="margin-top:32px;font-size:.8em;color:#555">
-                Foldery oddzielaj przecinkami
-            </p>`;
+    if (!folders.length) {
+        msgContent.style.display = 'block';
+        msgSpinner.style.display = 'none';
+        localPicker.style.display = 'none';
+        document.getElementById('msg-title').innerText = "Wpisz foldery w URL";
         return;
     }
-    msgEl.style.display = 'none';
 
-    // ── create columns ──
-    const cols = folders.map(folder => {
+    if (CONFIG.useLocalMock && Object.keys(localFileSystem).length === 0) {
+        msgContent.style.display = 'none';
+        msgSpinner.style.display = 'none';
+        localPicker.style.display = 'block';
+        document.getElementById('msg-title').innerText = "Odczyt z Dysku";
+        return;
+    }
+
+    msgContent.style.display = 'none';
+    localPicker.style.display = 'none';
+    msgSpinner.style.display = 'block';
+    document.getElementById('msg-title').innerText = "📷 Galeria";
+
+    const columns = folders.map(folder => {
         const col = document.createElement('div');
         col.className = 'column';
-        const hdr = document.createElement('div');
-        hdr.className = 'column-header';
-        hdr.textContent = folder;
-        col.appendChild(hdr);
-        const sp = document.createElement('div');
-        sp.className = 'spinner';
-        col.appendChild(sp);
+        
+        const header = document.createElement('div');
+        header.className = 'column-header';
+        header.textContent = folder;
+        col.appendChild(header);
+
         galEl.appendChild(col);
-        return {col, spinner:sp};
+        return col;
     });
 
-    // ── fetch all parallel ──
-    const results = await Promise.all(folders.map(async folder => {
+    for (let i = 0; i < folders.length; i++) {
+        const folder = folders[i];
         try {
-            const [imgs, descs] = await Promise.all([
-                fetchImages(folder), fetchDescs(folder)
-            ]);
-            imgs.forEach(i => i.desc = descs[i.name] || '');
-            return {images:imgs, error:null};
-        } catch(e){
-            return {images:[], error:e.message};
+            const mediaList = await fetchFolderData(folder);
+            galleryData.push({ folder, images: mediaList });
+
+            mediaList.forEach((mediaItem, imgIndex) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'img-wrapper';
+                wrapper.onclick = () => openLightbox(i, imgIndex);
+
+                let mediaEl;
+                if (mediaItem.isVideo) {
+                    mediaEl = document.createElement('video');
+                    mediaEl.src = mediaItem.src;
+                    mediaEl.preload = 'metadata';
+                    mediaEl.muted = true; // Wyciszony by móc załadować miniaturkę
+                    mediaEl.onloadeddata = () => mediaEl.classList.add('loaded');
+                } else {
+                    mediaEl = document.createElement('img');
+                    mediaEl.src = mediaItem.src;
+                    mediaEl.loading = 'lazy';
+                    mediaEl.onload = () => mediaEl.classList.add('loaded');
+                }
+                wrapper.appendChild(mediaEl);
+
+            // Nakładamy ikonkę SVG na filmy
+            if (mediaItem.isVideo) {
+                const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                svg.setAttribute("class", "play-icon");
+                svg.setAttribute("viewBox", "0 0 24 24");
+                svg.innerHTML = `
+                    <circle cx="12" cy="12" r="10" fill="#e63946" stroke="white" stroke-width="1"></circle>
+                    <polygon points="10,8 16,12 10,16" fill="white"></polygon>
+                `;
+                wrapper.appendChild(svg);
+            }
+
+                columns[i].appendChild(wrapper);
+            });
+        } catch (e) {
+            columns[i].innerHTML += `<div style="text-align:center; padding: 20px; color:#ff6b6b">${e.message}</div>`;
+            galleryData.push({ folder, images: [] });
         }
-    }));
+    }
 
-    // ── fill columns ──
-    results.forEach(({images,error}, ci) => {
-        const {col, spinner} = cols[ci];
-        spinner.remove();
-        galleryData[ci] = {folder:folders[ci], images};
+    msgEl.style.opacity = '0';
+    setTimeout(() => msgEl.style.display = 'none', 300);
+}
 
-        if(error){
-            const s = document.createElement('div');
-            s.className = 'status error';
-            s.textContent = error;
-            col.appendChild(s);
-            return;
+/* ---------- LIGHTBOX ---------- */
+const lbEl = document.getElementById('lightbox');
+const lbCenterWrapper = document.getElementById('lb-center-wrapper');
+const lbFolder = document.getElementById('lb-folder');
+const lbCounter = document.getElementById('lb-counter');
+const lbDesc = document.getElementById('lb-desc');
+const lbBody = document.getElementById('lb-body');
+
+// Pomocnicza funkcja tworząca element do Lightboxa
+function createMediaElement(src, isVideo) {
+    let el;
+    if (isVideo) {
+        el = document.createElement('video');
+        el.src = src;
+        el.controls = true;
+        el.autoplay = true;
+    } else {
+        el = document.createElement('img');
+        el.src = src;
+    }
+    el.className = 'lb-media';
+    return el;
+}
+
+async function openLightbox(colIndex, imgIndex) {
+    currentColumnIndex = colIndex;
+    currentImageIndex = imgIndex;
+    lbEl.classList.add('open');
+    updateLightboxUI('none');
+}
+
+function closeLightbox() {
+    lbEl.classList.remove('open');
+    // Pauza wideo przed zamknięciem
+    if (lbCenterWrapper.firstElementChild && lbCenterWrapper.firstElementChild.tagName === 'VIDEO') {
+        lbCenterWrapper.firstElementChild.pause();
+    }
+    lbCenterWrapper.innerHTML = ''; 
+    document.querySelectorAll('.lb-clone').forEach(el => el.remove());
+}
+
+function changeImage(direction) {
+    const colData = galleryData[currentColumnIndex];
+    if (colData.images.length === 0) return;
+
+    let newIndex = currentImageIndex + direction;
+    if (newIndex < 0) newIndex = colData.images.length - 1;
+    if (newIndex >= colData.images.length) newIndex = 0;
+
+    currentImageIndex = newIndex;
+    updateLightboxUI(direction > 0 ? 'right' : 'left');
+}
+
+async function updateLightboxUI(direction) {
+    const colData = galleryData[currentColumnIndex];
+    const mediaData = colData.images[currentImageIndex];
+
+    lbFolder.textContent = colData.folder;
+    lbCounter.textContent = `${currentImageIndex + 1} / ${colData.images.length}`;
+
+    const oldMedia = lbCenterWrapper.firstElementChild;
+
+    if (direction !== 'none' && oldMedia) {
+        // Czyścimy trwające animacje jeśli gracz "spami" przyciski
+        document.querySelectorAll('.lb-clone').forEach(el => el.remove());
+
+        // 1. STARE MEDIA -> Odjeżdża z tyłu (Z-index: 20)
+        const oldClone = oldMedia.cloneNode(true);
+        oldClone.className = 'lb-clone';
+        if (oldClone.tagName === 'VIDEO') {
+            oldMedia.pause(); // Stop dźwięku w oryginale
+            oldClone.muted = true; // Klon też niemy
+            oldClone.removeAttribute('controls');
         }
-        if(!images.length){
-            const s = document.createElement('div');
-            s.className = 'status';
-            s.textContent = 'Brak obrazków';
-            col.appendChild(s);
-            return;
+        lbBody.appendChild(oldClone);
+
+        // 2. NOWE MEDIA GŁÓWNE -> Pojawia się natychmiast na wierzchu (Z-index: 40)
+        const newMedia = createMediaElement(mediaData.src, mediaData.isVideo);
+        lbCenterWrapper.innerHTML = ''; 
+        lbCenterWrapper.appendChild(newMedia); // Jest już na miejscu gotowe do oglądania
+
+        // 3. NOWE MEDIA KLON -> "Duch" nadlatujący z tyłu jako pęd (Z-index: 20)
+        const newClone = newMedia.cloneNode(true);
+        newClone.className = 'lb-clone';
+        if (newClone.tagName === 'VIDEO') {
+            newClone.muted = true; // Duch w tle jest bez dźwięku
+            newClone.removeAttribute('controls');
         }
+        
+        // Ustawienie początkowej pozycji ducha za krawędzią ekranu
+        if (direction === 'right') {
+            newClone.style.transform = 'translateX(100vw) scale(0.6)';
+        } else {
+            newClone.style.transform = 'translateX(-100vw) scale(0.6)';
+        }
+        lbBody.appendChild(newClone);
 
-        images.forEach((imgData, ii) => {
-            const wrap = document.createElement('div');
-            wrap.className = 'col-img-wrap';
-            wrap.addEventListener('click', () => openLightbox(ci, ii));
+        // Przebudowanie DOM-u by aktywować animację CSS
+        void lbBody.offsetWidth;
 
-            const img = document.createElement('img');
-            img.src = imgData.src;
-            img.alt = imgData.name;
-            img.loading = 'lazy';
-            img.onload = () => img.classList.add('loaded');
-            wrap.appendChild(img);
-            col.appendChild(wrap);
-        });
-    });
-}
+        // 4. ANIMACJA 
+        if (direction === 'right') {
+            oldClone.style.transform = 'translateX(-100vw) scale(0.6)';
+        } else {
+            oldClone.style.transform = 'translateX(100vw) scale(0.6)';
+        }
+        oldClone.style.opacity = '0';
+        
+        // Duch wjeżdża "za plecami" prawdziwego zdjęcia, by ostatecznie się z nim zrównać i schować
+        newClone.style.transform = 'translateX(0) scale(1)';
 
-// ════════════════════════════════════════
-//           LIGHTBOX — OPEN / CLOSE
-// ════════════════════════════════════════
-function openLightbox(ci, ii){
-    LB.colIdx = ci;
-    LB.imgIdx = ii;
-    LB.open = true;
-    LB.animating = false;
+        // Sprzątanie po 300 milisekundach (gdy zakończy się pęd)
+        setTimeout(() => {
+            if(oldClone.parentNode) oldClone.remove();
+            if(newClone.parentNode) newClone.remove();
+        }, 1000);
 
-    const d = galleryData[ci];
-    LB.folderEl.textContent = d.folder;
+    } else {
+        // Uruchomienie pierwsze (otwarcie po kliknięciu miniatury)
+        lbCenterWrapper.innerHTML = '';
+        lbCenterWrapper.appendChild(createMediaElement(mediaData.src, mediaData.isVideo));
+    }
 
-    // reset images
-    resetImgSlots();
-    LB.activeImg = LB.imgA;
-    LB.inactiveImg = LB.imgB;
+    // --- Pobieranie opisów plików ---
+    const currentReqId = ++descLoadId;
+    lbDesc.innerHTML = '';
 
-    showCurrent();
-    LB.el.classList.add('open');
-    document.body.style.overflow = 'hidden';
-    preload();
-}
+    if (mediaData.txtUrl) {
+        if (descCache[mediaData.txtUrl]) {
+            lbDesc.innerHTML = descCache[mediaData.txtUrl];
+        } else {
+            lbDesc.innerHTML = '<span class="lb-desc-loading">...</span>';
+            try {
+                const response = await fetch(mediaData.txtUrl);
+                const text = await response.text();
+                
+                if (currentReqId !== descLoadId) return; 
 
-function closeLightbox(){
-    LB.open = false;
-    LB.el.classList.remove('open');
-    document.body.style.overflow = '';
-    resetImgSlots();
-}
-
-function resetImgSlots(){
-    [LB.imgA, LB.imgB].forEach(i => {
-        i.style.cssText = '';
-        i.src = '';
-        i.style.opacity = '0';
-    });
-    LB.loader.classList.remove('show');
-}
-
-// ════════════════════════════════════════
-//           LIGHTBOX — DISPLAY
-// ════════════════════════════════════════
-function showCurrent(){
-    const d = galleryData[LB.colIdx];
-    const img = d.images[LB.imgIdx];
-
-    LB.loader.classList.add('show');
-
-    LB.activeImg.onload = () => LB.loader.classList.remove('show');
-    LB.activeImg.style.transition = 'none';
-    LB.activeImg.style.transform  = 'translateX(0)';
-    LB.activeImg.style.opacity    = '1';
-    LB.activeImg.src = img.src;
-
-    LB.inactiveImg.style.opacity = '0';
-
-    setCounter(LB.imgIdx+1, d.images.length, true);
-    setDesc(img.desc, true);
-    updateNav();
-}
-
-function updateNav(){
-    const d = galleryData[LB.colIdx];
-    LB.prevBtn.classList.toggle('disabled', LB.imgIdx <= 0);
-    LB.nextBtn.classList.toggle('disabled', LB.imgIdx >= d.images.length-1);
-}
-
-// ════════════════════════════════════════
-//        LIGHTBOX — NAVIGATE (SLIDE)
-// ════════════════════════════════════════
-function navigateLB(dir){
-    if(LB.animating) return;
-    const d = galleryData[LB.colIdx];
-    const ni = LB.imgIdx + dir;
-    if(ni < 0 || ni >= d.images.length) return;
-
-    LB.animating = true;
-    const nImg = d.images[ni];
-
-    const outgoing = LB.activeImg;
-    const incoming = LB.inactiveImg;
-
-    // ── INCOMING: natychmiast na środku, pod spodem ──
-    incoming.src              = nImg.src;
-    incoming.style.transition = 'none';
-    incoming.style.transform  = 'translateX(0)';
-    incoming.style.opacity    = '1';
-    incoming.style.zIndex     = '1';
-
-    // ── OUTGOING: zjeżdża w bok (na wierzchu) ──
-    outgoing.style.zIndex     = '2';
-    const ease = `${SLIDE_MS}ms cubic-bezier(.22,.61,.36,1)`;
-    outgoing.style.transition = `transform ${ease}, opacity ${SLIDE_MS}ms ease`;
-    outgoing.style.transform  = `translateX(${-dir * 100}%)`;
-    outgoing.style.opacity    = '0';
-
-    LB.imgIdx = ni;
-    animateCounter(ni+1, d.images.length);
-    animateDesc(nImg.desc);
-    updateNav();
-
-    setTimeout(() => {
-        LB.activeImg   = incoming;
-        LB.inactiveImg = outgoing;
-        outgoing.style.transition = 'none';
-        outgoing.style.opacity    = '0';
-        outgoing.style.transform  = '';
-        outgoing.style.zIndex     = '';
-        incoming.style.zIndex     = '';
-        delete outgoing.dataset.peekSrc;
-        LB.animating = false;
-        preloadAdjacent();
-    }, SLIDE_MS);
-}
-
-// ════════════════════════════════════════
-//        COUNTER ANIMATION
-// ════════════════════════════════════════
-function setCounter(num, total, instant){
-    const el = LB.counterInner;
-    el.textContent = `${num} / ${total}`;
-    if(instant){
-        el.style.transition = 'none';
-        el.style.transform  = 'translateY(0)';
-        el.style.opacity    = '1';
+                const formattedText = text.replace(/\n/g, '<br>'); 
+                descCache[mediaData.txtUrl] = formattedText;
+                lbDesc.innerHTML = formattedText;
+            } catch (e) {
+                if (currentReqId === descLoadId) {
+                    lbDesc.innerHTML = '<span style="color:#ff6b6b">Błąd wczytywania opisu. Upewnij się, że opisy mają to samo rozszerzenie .txt</span>';
+                }
+            }
+        }
+    } else {
+        lbDesc.innerHTML = '<span style="color:#555; font-style:italic">Brak opisu (stwórz plik .txt o tej samej nazwie).</span>';
     }
 }
 
-function animateCounter(num, total){
-    const el = LB.counterInner;
-    const half = SLIDE_MS / 2;
+// Obsługa dotykowa dla telefonów
+let touchStartX = 0;
+lbBody.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; });
+lbBody.addEventListener('touchend', e => {
+    let touchEndX = e.changedTouches[0].screenX;
+    if (touchStartX - touchEndX > 40) changeImage(1);
+    if (touchEndX - touchStartX > 40) changeImage(-1);
+});
 
-    // slide out up
-    el.style.transition = `transform ${half}ms ease, opacity ${half}ms ease`;
-    el.style.transform  = 'translateY(-110%)';
-    el.style.opacity    = '0';
+// Zapobieganie przesuwaniu strony strzałkami
+document.addEventListener('keydown', e => {
+    if (!lbEl.classList.contains('open')) return;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft' || e.key === 'Escape') { e.preventDefault(); }
+    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowRight') changeImage(1);
+    if (e.key === 'ArrowLeft') changeImage(-1);
+});
 
-    setTimeout(() => {
-        el.textContent = `${num} / ${total}`;
-        el.style.transition = 'none';
-        el.style.transform  = 'translateY(110%)';
-        el.style.opacity    = '0';
-
-        requestAnimationFrame(() => {
-            el.style.transition = `transform ${half}ms ease, opacity ${half}ms ease`;
-            el.style.transform  = 'translateY(0)';
-            el.style.opacity    = '1';
-        });
-    }, half);
-}
-
-// ════════════════════════════════════════
-//        DESCRIPTION ANIMATION
-// ════════════════════════════════════════
-function setDesc(text, instant){
-    LB.descEl.textContent = text || '';
-    LB.descEl.style.opacity = text ? '1' : '0';
-    if(instant) LB.descEl.style.transition = 'none';
-    else        LB.descEl.style.transition = 'opacity 150ms ease';
-}
-
-function animateDesc(text){
-    LB.descEl.style.transition = 'opacity 100ms ease';
-    LB.descEl.style.opacity = '0';
-    setTimeout(() => {
-        LB.descEl.textContent = text || '';
-        LB.descEl.style.opacity = text ? '1' : '0';
-    }, 110);
-}
-
-// ════════════════════════════════════════
-//        PRELOAD ADJACENT
-// ════════════════════════════════════════
-function preload(){
-    const d = galleryData[LB.colIdx];
-    [-1, 1, 2].forEach(off => {
-        const i = LB.imgIdx + off;
-        if(i >= 0 && i < d.images.length){
-            const p = new Image();
-            p.src = d.images[i].src;
-        }
-    });
-}
-
-// ════════════════════════════════════════
-//        DRAG / SWIPE
-// ════════════════════════════════════════
-function setupDrag(){
-    const stage = LB.stage;
-
-    stage.addEventListener('pointerdown', e => {
-        if(LB.animating || !LB.open) return;
-        LB.dragging   = true;
-        LB.dragStartX = e.clientX;
-        LB.dragDelta  = 0;
-        LB.dragPid    = e.pointerId;
-        stage.setPointerCapture(e.pointerId);
-        LB.activeImg.style.transition = 'none';
-    });
-
-    stage.addEventListener('pointermove', e => {
-        if(!LB.dragging || e.pointerId !== LB.dragPid) return;
-        let delta = e.clientX - LB.dragStartX;
-
-        // edge resistance
-        const d = galleryData[LB.colIdx];
-        if((LB.imgIdx <= 0 && delta > 0) ||
-           (LB.imgIdx >= d.images.length-1 && delta < 0)){
-            delta *= 0.15;
-        }
-        LB.dragDelta = delta;
-        LB.activeImg.style.transform = `translateX(${delta}px)`;
-
-        // peek next / prev
-        const dir = delta < 0 ? 1 : -1;
-        const pi  = LB.imgIdx + dir;
-        if(pi >= 0 && pi < d.images.length){
-            const inc = LB.inactiveImg;
-            if(inc.dataset.peekSrc !== d.images[pi].src){
-                inc.src = d.images[pi].src;
-                inc.dataset.peekSrc = d.images[pi].src;
-            }
-            inc.style.transition = 'none';
-            inc.style.opacity    = '1';
-            inc.style.transform  = `translateX(${dir * stage.offsetWidth + delta}px)`;
-        }
-    });
-
-    stage.addEventListener('pointerup', e => {
-        if(!LB.dragging || e.pointerId !== LB.dragPid) return;
-        LB.dragging = false;
-
-        const sw = stage.offsetWidth;
-        const absDelta = Math.abs(LB.dragDelta);
-
-        // tap → close
-        if(absDelta < 4){
-            closeLightbox();
-            return;
-        }
-
-        const d = galleryData[LB.colIdx];
-
-        // threshold crossed → complete swipe
-        if(absDelta > sw * SWIPE_THRESHOLD){
-            const dir = LB.dragDelta < 0 ? 1 : -1;
-            const ni  = LB.imgIdx + dir;
-            if(ni >= 0 && ni < d.images.length){
-                completeSwipe(dir, ni, d);
-                return;
-            }
-        }
-
-        // snap back
-        snapBack();
-    });
-
-    stage.addEventListener('pointercancel', () => {
-        if(LB.dragging){ LB.dragging = false; snapBack(); }
-    });
-}
-
-function completeSwipe(dir, ni, d){
-    LB.animating = true;
-    const sw = LB.stage.offsetWidth;
-
-    // ── INCOMING: teleport na środek ──
-    LB.inactiveImg.style.transition = 'none';
-    LB.inactiveImg.style.transform  = 'translateX(0)';
-    LB.inactiveImg.style.opacity    = '1';
-    LB.inactiveImg.style.zIndex     = '1';
-
-    // ── OUTGOING: dokańcza zjazd ──
-    LB.activeImg.style.zIndex       = '2';
-    const ease = `${SLIDE_MS}ms cubic-bezier(.22,.61,.36,1)`;
-    LB.activeImg.style.transition   = `transform ${ease}, opacity ${SLIDE_MS}ms ease`;
-    LB.activeImg.style.transform    = `translateX(${-dir * sw}px)`;
-    LB.activeImg.style.opacity      = '0';
-
-    LB.imgIdx = ni;
-    animateCounter(ni+1, d.images.length);
-    animateDesc(d.images[ni].desc);
-    updateNav();
-
-    setTimeout(() => {
-        const tmp = LB.activeImg;
-        LB.activeImg   = LB.inactiveImg;
-        LB.inactiveImg = tmp;
-
-        tmp.style.transition = 'none';
-        tmp.style.opacity    = '0';
-        tmp.style.transform  = '';
-        tmp.style.zIndex     = '';
-        LB.activeImg.style.zIndex = '';
-        delete tmp.dataset.peekSrc;
-
-        LB.animating = false;
-        preloadAdjacent();
-    }, SLIDE_MS);
-}
-
-function snapBack(){
-    const ease = `${SLIDE_MS}ms ease`;
-    LB.activeImg.style.transition   = `transform ${ease}`;
-    LB.activeImg.style.transform    = 'translateX(0)';
-    LB.inactiveImg.style.transition = `opacity ${ease}`;
-    LB.inactiveImg.style.opacity    = '0';
-}
-
-// ════════════════════════════════════════
-//        KEYBOARD
-// ════════════════════════════════════════
-function onKey(e){
-    if(!LB.open) return;
-    switch(e.key){
-        case 'ArrowLeft':  e.preventDefault(); navigateLB(-1); break;
-        case 'ArrowRight': e.preventDefault(); navigateLB(1);  break;
-        case 'Escape':     closeLightbox(); break;
-    }
-}
+window.addEventListener('hashchange', render);
+render();
 </script>
 </body>
 </html>
