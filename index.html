@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Galeria</title>
+    <title>Galeria z Filmami</title>
     <style>
         * {
             margin: 0;
@@ -12,45 +12,21 @@
         }
 
         body {
-            background: #0a0a0a;
+            background: rgb(67, 67, 67);
             color: #fff;
             font-family: 'Segoe UI', Arial, sans-serif;
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
-        /* ---------- ekran powitalny ---------- */
-        #message {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            min-height: 100vh;
-            text-align: center;
-            padding: 20px;
-            color: #888;
-        }
-        #message h2 {
-            font-size: 2.4em;
-            margin-bottom: 20px;
-            color: #fff;
-        }
-        #message p {
-            font-size: 1.1em;
-            margin-bottom: 12px;
-        }
-        #message code {
-            background: #161628;
-            padding: 12px 22px;
-            border-radius: 8px;
-            color: #4fc3f7;
-            font-size: 1em;
-            word-break: break-all;
-        }
+        
 
-        /* ---------- galeria – kolumny ---------- */
+        /* ---------- GALERIA ---------- */
         #gallery {
             display: flex;
             width: 100%;
+            padding: 15px;
+            gap: 15px;
         }
 
         .column {
@@ -58,88 +34,311 @@
             display: flex;
             flex-direction: column;
             min-width: 0;
-            border-right: 1px solid #1a1a1a;
-        }
-        .column:last-child {
-            border-right: none;
+            gap: 20px;
         }
 
         .column-header {
             text-align: center;
             padding: 14px 8px;
-            font-size: .9em;
-            font-weight: 700;
+            font-size: 1.1em;
+            font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 2px;
-            background: #111;
-            border-bottom: 2px solid #222;
+            background: rgba(30, 30, 30, 0.6);
+            /*border-radius: 8px;*/
+            backdrop-filter: blur(5px);
             position: sticky;
-            top: 0;
+            top: 15px;
             z-index: 10;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
 
-        .column img {
+        .img-wrapper {
+            position: relative; /* Wymagane dla pozycjonowania SVG */
+            background: rgb(85, 85, 85);
+            /*padding: 8px;*/
+            /*border-radius: 12px;*/
+            box-shadow: 3px 0px 10px 0px rgba(40, 40, 40, 0.8);
+            overflow: hidden;
+            cursor: pointer;
+            transition: box-shadow 0.3s ease, transform 0.3s ease;
+
+        }
+
+        .img-wrapper img, .img-wrapper video {
             width: 100%;
             display: block;
+            /*border-radius: 6px;*/
             opacity: 0;
-            transition: opacity .35s ease;
-            cursor: zoom-in;
+            transition: opacity 0.5s ease, transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
-        .column img.loaded {
+        .img-wrapper img.loaded, .img-wrapper video.loaded {
             opacity: 1;
         }
 
-        .status {
-            text-align: center;
-            padding: 50px 10px;
-            font-size: .9em;
-            color: #444;
+        .img-wrapper:hover {
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.6);
         }
-        .status.error {
-            color: #e74c3c;
+        .img-wrapper:hover img, .img-wrapper:hover video {
+            transform: scale(1.06);
         }
 
-        /* ---------- lightbox ---------- */
+        /* Ikonka Play dla filmów w kolumnach */
+        .play-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100px;
+            height: 100px;
+            pointer-events: none; /* Kliknięcie przechodzi przez ikonę do wrappera */
+            opacity: 0.6;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        .img-wrapper:hover .play-icon {
+            transform: translate(-50%, -50%) scale(1.15);
+            opacity: 1;
+        }
+
+        /* ---------- LIGHTBOX ---------- */
         #lightbox {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, .95);
+            background: rgba(15, 15, 15, 0.94);
             z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            cursor: zoom-out;
+            flex-direction: column;
         }
-        #lightbox.open {
+        #lightbox.open { display: flex; }
+
+        .lb-header {
             display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 25px;
+            background: rgba(0, 0, 0, 0.5);
+            font-size: 1.2em;
+            z-index: 60;
         }
-        #lightbox img {
-            max-width: 95vw;
-            max-height: 95vh;
-            object-fit: contain;
-            border-radius: 4px;
+        .lb-folder { font-weight: bold; color: #4fc3f7; }
+        .lb-counter { 
+            font-family: monospace; 
+            font-size: 1.2em; 
+            background: #333; 
+            padding: 5px 12px; 
+            /*border-radius: 20px;*/
+        }
+        .lb-close { cursor: pointer; font-size: 2em; line-height: 1; color: #bbb; z-index: 60;}
+        .lb-close:hover { color: #fff; }
+
+        .lb-body {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .lb-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: none;
+            font-size: 2em;
+            padding: 20px 15px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background 0.2s;
+            z-index: 50; 
+        }
+        .lb-nav:hover { background: rgba(255,255,255,0.3); }
+        .lb-nav.prev { left: 20px; }
+        .lb-nav.next { right: 20px; }
+
+        /* ---------- NOWA LOGIKA WARSTW W LIGHTBOXIE ---------- */
+        
+        #lb-center-wrapper {
+            position: relative;
+            z-index: 40; /* ZAWSZE NA WIERZCHU */
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        /* ---------- loader spinner ---------- */
+        .lb-media {
+            max-width: 85vw;
+            max-height: 90vh;
+            object-fit: contain;
+            border-radius: 1px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+        }
+
+        .lb-clone {
+            position: absolute; 
+            max-width: 85vw;
+            max-height: 85vh;
+            object-fit: contain;
+            border-radius: 8px;
+            pointer-events: none; 
+            transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.5s ease;
+            z-index: 20; 
+            /* NOWE: Duchy są w 70% przezroczyste podczas ruchu */
+            opacity: 0.2; 
+        }
+
+        .lb-footer {
+            min-height: 80px;
+            padding: 20px;
+            text-align: center;
+            font-size: 1.1em;
+            background: rgba(0, 0, 0, 0.5);
+            color: #ddd;
+            z-index: 60;
+        }
+        .lb-desc-loading {
+            color: #888; font-style: italic; font-size: 0.9em;
+            video::-webkit-media-controls-panel {
+            display: flex !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+}
+        }
+
         .spinner {
             margin: 60px auto;
-            width: 36px;
-            height: 36px;
-            border: 3px solid #222;
-            border-top-color: #4fc3f7;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #444;
+            border-top-color: #fff;
             border-radius: 50%;
             animation: spin .8s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
+
+
+
+
+
+
+/* ---------- EKRAN POWITALNY ---------- */
+        #message {
+            /*position: fixed;*/
+            inset: 0;
+            background: rgb(0, 0, 0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            /*padding: 20px;*/
+            z-index: 50;
+            transition: opacity 0.3s ease;
+        }
+
+        .pulse-text {
+            font-size: 2.4em;
+            margin-bottom: 20px;
+            color: #fff;
+            animation: pulse-glow 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse-glow {
+            0% { text-shadow: 0 0 5px rgba(255, 255, 255, 0.2); transform: scale(1); }
+            50% { text-shadow: 0 0 25px rgba(255, 255, 255, 0.8); transform: scale(1.02); }
+            100% { text-shadow: 0 0 5px rgba(255, 255, 255, 0.2); transform: scale(1); }
+        }
+
+        #local-picker-container {
+            display: none;
+            margin-top: 25px;
+            background: rgba(0,0,0,0.2);
+            padding: 20px;
+            /*border-radius: 12px;*/
+            border: 1px dashed #777;
+        }
+
+
+          /* Kontener wyrównujący loader na środku */
+  .loader-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: sans-serif;
+    color: #555;
+  }
+
+  /* Styl samego spinnera */
+  .loader {
+    border: 8px solid #f3f3f3; /* Jasne tło kręgu */
+    border-top: 8px solid #3498db; /* Kolor elementu kręcącego się */
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 10px;
+    position: absolute;
+
+  /* Animacja obrotu */
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
     </style>
 </head>
 <body>
 
-<div id="message"></div>
+<div id="message">
+
+
+    <div class="loader-container">
+      <div class="loader"></div>
+      <img src="images/welcome.png">
+    </div>
+
+
+
+    <div class="pulse-text" id="msg-title">📷 Galeria</div>
+    
+    <div id="msg-content" style="display:none;">
+        <p>Dodaj nazwy folderów po <strong>#</strong> w adresie URL:</p>
+        <code style="background: #222; padding: 10px; border-radius: 6px; display: block; margin: 15px 0;">
+            #folder1,folder2
+        </code>
+    </div>
+
+    <div id="local-picker-container">
+        <p style="margin-bottom: 12px; font-weight: bold; color: #4fc3f7;">TRYB TESTÓW LOKALNYCH</p>
+        <p style="font-size: 0.9em; color:#ddd; margin-bottom: 15px;">
+            Wybierz poniżej folder główny (zawierający podfoldery),<br>aby załadować zdjęcia, <b>filmy</b> i opisy z dysku.
+        </p>
+        <input type="file" id="dir-picker" webkitdirectory directory multiple style="background:#222; padding:10px; border-radius:5px; color:#fff; cursor:pointer;">
+    </div>
+
+    <div id="msg-spinner" class="spinner"></div>
+</div>
+
 <div id="gallery"></div>
 
-<div id="lightbox" onclick="this.classList.remove('open')">
-    <img src="" alt="">
+<!-- LIGHTBOX -->
+<div id="lightbox">
+    <div class="lb-header">
+        <div class="lb-folder" id="lb-folder">Nazwa Folderu</div>
+        <div class="lb-counter" id="lb-counter">1/5</div>
+        <div class="lb-close" onclick="closeLightbox()">&times;</div>
+    </div>
+    
+    <div class="lb-body" id="lb-body">
+        <button class="lb-nav prev" onclick="changeImage(-1)">&#10094;</button>
+        <!-- Zmieniony kontener centralny - przyjmuje filmy i zdjęcia -->
+        <div id="lb-center-wrapper"></div>
+        <button class="lb-nav next" onclick="changeImage(1)">&#10095;</button>
+    </div>
+
+    <div class="lb-footer" id="lb-desc"></div>
 </div>
 
 <script>
@@ -147,162 +346,374 @@
 //               K O N F I G U R A C J A
 // ═══════════════════════════════════════════════
 const CONFIG = {
-    githubUser : 'TWOJ_USERNAME',   // ← username GitHub
-    githubRepo : 'TWOJ_REPO',      // ← nazwa repozytorium
-    branch     : 'main',           // ← branch (main / master)
-    basePath   : ''                // ← prefix folderu, np. 'images'
-                                   //   (puste = foldery w rootcie repo)
+    useLocalMock : false, // TRUE dla testów na dysku, FALSE dla GitHuba
+    githubUser : 'mickurepo',   
+    githubRepo : 'gallery',      
+    branch     : 'dev',           
+    basePath   : 'images'                
 };
 // ═══════════════════════════════════════════════
 
-const IMG_EXT = new Set([
-    'jpg','jpeg','png','gif','webp','bmp','svg','avif','tiff'
-]);
+// Dodana obsługa rozszerzeń filmowych
+const MEDIA_EXT = new Set(['jpg','jpeg','png','gif','webp','mp4','webm','ogg','mov']);
+const VIDEO_EXT = new Set(['mp4','webm','ogg','mov']);
 
-/* ---------- parsowanie URL ---------- */
+let currentColumnIndex = 0;
+let currentImageIndex = 0;
+let galleryData = []; 
+let descCache = {};   
+let descLoadId = 0; 
+let localFileSystem = {}; 
+
 function getFolders() {
     const hash = window.location.hash.slice(1);
     if (!hash) return [];
-    return hash
-        .split(',')
-        .map(f => decodeURIComponent(f.trim()))
-        .filter(Boolean);
+    return hash.split(',').map(f => decodeURIComponent(f.trim())).filter(Boolean);
 }
 
-/* ---------- pobieranie listy obrazków z GitHub API ---------- */
-async function fetchImages(folder) {
-    const path = CONFIG.basePath
-        ? CONFIG.basePath + '/' + folder
-        : folder;
+// Lokalny picker z dysku
+document.getElementById('dir-picker').addEventListener('change', (e) => {
+    const files = e.target.files;
+    localFileSystem = {};
+    
+    for (let file of files) {
+        const parts = file.webkitRelativePath.split('/');
+        if (parts.length >= 2) {
+            const folderName = parts[parts.length - 2]; 
+            const fileName = file.name;
+            const ext = fileName.split('.').pop().toLowerCase();
+            const baseName = fileName.substring(0, fileName.lastIndexOf('.')).toLowerCase();
 
+            if (!localFileSystem[folderName]) {
+                localFileSystem[folderName] = { media: [], txts: {} };
+            }
+
+            if (MEDIA_EXT.has(ext)) {
+                localFileSystem[folderNtame].media.push({ file, isVideo: VIDEO_EXT.has(ext) });
+            } else if (ext === 'txt') {
+                localFileSystem[folderName].txts[baseName] = file;
+            }
+        }
+    }
+    render(); 
+});
+
+async function fetchFolderData(folder) {
+    if (CONFIG.useLocalMock) {
+        if (!localFileSystem[folder]) throw new Error(`Brak folderu "${folder}".`);
+        const folderData = localFileSystem[folder];
+        
+        // folderData.media.sort((a, b) => a.file.name.localeCompare(b.file.name, undefined, { numeric: true }));
+
+        return folderData.media.map(item => {
+            const baseName = item.file.name.substring(0, item.file.name.lastIndexOf('.')).toLowerCase();
+            const txtFile = folderData.txts[baseName];
+            return {
+                src: URL.createObjectURL(item.file), 
+                txtUrl: txtFile ? URL.createObjectURL(txtFile) : null,
+                isVideo: item.isVideo
+            };
+        });
+    }
+
+    // 2. ODCZYT DOCELOWY Z GITHUB API
+    const path = CONFIG.basePath ? `${CONFIG.basePath}/${folder}` : folder;
     const apiPath = path.split('/').map(encodeURIComponent).join('/');
-    const url =
-        `https://api.github.com/repos/` +
-        `${CONFIG.githubUser}/${CONFIG.githubRepo}` +
-        `/contents/${apiPath}?ref=${CONFIG.branch}`;
+    const url = `https://api.github.com/repos/${CONFIG.githubUser}/${CONFIG.githubRepo}/contents/${apiPath}?ref=${CONFIG.branch}`;
 
     const res = await fetch(url);
-
-    if (!res.ok)
-        throw new Error(`Folder „${folder}" nie znaleziony (${res.status})`);
+    if (!res.ok) throw new Error(`Brak folderu: ${folder}`);
 
     const files = await res.json();
-
-    if (!Array.isArray(files))
-        throw new Error(`„${folder}" nie jest folderem`);
+    const txtFiles = {};
+    
+    files.forEach(f => {
+        if (f.name.toLowerCase().endsWith('.txt')) {
+            const baseName = f.name.substring(0, f.name.lastIndexOf('.')).toLowerCase();
+            txtFiles[baseName] = f.download_url;
+        }
+    });
 
     return files
-        .filter(f =>
-            f.type === 'file' &&
-            IMG_EXT.has(f.name.split('.').pop().toLowerCase())
-        )
-        .sort((a, b) =>
-            a.name.localeCompare(b.name, undefined, { numeric: true })
-        )
-        .map(f => f.download_url);          // gotowy URL do obrazka
+        .filter(f => f.type === 'file' && MEDIA_EXT.has(f.name.split('.').pop().toLowerCase()))
+        .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
+        .map(f => {
+            const ext = f.name.split('.').pop().toLowerCase();
+            const baseName = f.name.substring(0, f.name.lastIndexOf('.')).toLowerCase();
+            return { 
+                src: f.download_url, 
+                txtUrl: txtFiles[baseName] || null,
+                isVideo: VIDEO_EXT.has(ext)
+            };
+        });
 }
 
-/* ---------- lightbox ---------- */
-function openLightbox(src) {
-    const lb = document.getElementById('lightbox');
-    lb.querySelector('img').src = src;
-    lb.classList.add('open');
-}
-
-/* ---------- renderowanie galerii ---------- */
 async function render() {
     const folders = getFolders();
-    const msgEl  = document.getElementById('message');
-    const galEl  = document.getElementById('gallery');
+    const msgEl = document.getElementById('message');
+    const msgContent = document.getElementById('msg-content');
+    const msgSpinner = document.getElementById('msg-spinner');
+    const localPicker = document.getElementById('local-picker-container');
+    const galEl = document.getElementById('gallery');
 
     galEl.innerHTML = '';
+    galleryData = [];
 
-    // brak folderów → ekran powitalny
     if (!folders.length) {
-        msgEl.style.display = '';
-        msgEl.innerHTML = `
-            <h2>📷 Galeria</h2>
-            <p>Dodaj nazwy folderów po <strong>#</strong> w adresie URL:</p>
-            <code>${location.origin}${location.pathname}#folder1,folder2,folder3</code>
-            <p style="margin-top:24px;font-size:.85em;color:#555">
-                Lub użyj ładnego adresu (jeśli 404.html jest wgrany):<br>
-                <code style="margin-top:6px;font-size:.95em">${location.origin}${location.pathname}folder1,folder2,folder3</code>
-            </p>`;
+        msgContent.style.display = 'block';
+        msgSpinner.style.display = 'none';
+        localPicker.style.display = 'none';
+        document.getElementById('msg-title').innerText = "Wpisz foldery w URL";
         return;
     }
 
-    msgEl.style.display = 'none';
+    if (CONFIG.useLocalMock && Object.keys(localFileSystem).length === 0) {
+        msgContent.style.display = 'none';
+        msgSpinner.style.display = 'none';
+        localPicker.style.display = 'block';
+        document.getElementById('msg-title').innerText = "Odczyt z Dysku";
+        return;
+    }
 
-    // natychmiast twórz kolumny ze spinnerami
+    msgContent.style.display = 'none';
+    localPicker.style.display = 'none';
+    msgSpinner.style.display = 'block';
+    document.getElementById('msg-title').innerText = "📷 Galeria";
+
     const columns = folders.map(folder => {
         const col = document.createElement('div');
         col.className = 'column';
-
+        
         const header = document.createElement('div');
         header.className = 'column-header';
         header.textContent = folder;
         col.appendChild(header);
 
-        const spinner = document.createElement('div');
-        spinner.className = 'spinner';
-        col.appendChild(spinner);
-
         galEl.appendChild(col);
-        return { col, spinner };
+        return col;
     });
 
-    // pobierz wszystkie foldery równolegle
-    const results = await Promise.all(
-        folders.map(async folder => {
-            try {
-                return { images: await fetchImages(folder), error: null };
-            } catch (e) {
-                return { images: [], error: e.message };
+    for (let i = 0; i < folders.length; i++) {
+        const folder = folders[i];
+        try {
+            const mediaList = await fetchFolderData(folder);
+            galleryData.push({ folder, images: mediaList });
+
+            mediaList.forEach((mediaItem, imgIndex) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'img-wrapper';
+                wrapper.onclick = () => openLightbox(i, imgIndex);
+
+                let mediaEl;
+                if (mediaItem.isVideo) {
+                    mediaEl = document.createElement('video');
+                    mediaEl.src = mediaItem.src;
+                    mediaEl.preload = 'metadata';
+                    mediaEl.muted = true; // Wyciszony by móc załadować miniaturkę
+                    mediaEl.onloadeddata = () => mediaEl.classList.add('loaded');
+                } else {
+                    mediaEl = document.createElement('img');
+                    mediaEl.src = mediaItem.src;
+                    mediaEl.loading = 'lazy';
+                    mediaEl.onload = () => mediaEl.classList.add('loaded');
+                }
+                wrapper.appendChild(mediaEl);
+
+            // Nakładamy ikonkę SVG na filmy
+            if (mediaItem.isVideo) {
+                const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                svg.setAttribute("class", "play-icon");
+                svg.setAttribute("viewBox", "0 0 24 24");
+                svg.innerHTML = `
+                    <circle cx="12" cy="12" r="10" fill="#e63946" stroke="white" stroke-width="1"></circle>
+                    <polygon points="10,8 16,12 10,16" fill="white"></polygon>
+                `;
+                wrapper.appendChild(svg);
             }
-        })
-    );
 
-    // wstaw obrazki do kolumn
-    results.forEach(({ images, error }, i) => {
-        const { col, spinner } = columns[i];
-        spinner.remove();
-
-        if (error) {
-            const s = document.createElement('div');
-            s.className = 'status error';
-            s.textContent = error;
-            col.appendChild(s);
-            return;
+                columns[i].appendChild(wrapper);
+            });
+        } catch (e) {
+            columns[i].innerHTML += `<div style="text-align:center; padding: 20px; color:#ff6b6b">${e.message}</div>`;
+            galleryData.push({ folder, images: [] });
         }
+    }
 
-        if (!images.length) {
-            const s = document.createElement('div');
-            s.className = 'status';
-            s.textContent = 'Brak obrazków w tym folderze';
-            col.appendChild(s);
-            return;
-        }
-
-        images.forEach(src => {
-            const img = document.createElement('img');
-            img.src = src;
-            img.loading = 'lazy';
-            img.alt = '';
-            img.onload = () => img.classList.add('loaded');
-            img.onclick = () => openLightbox(src);
-            col.appendChild(img);
-        });
-    });
+    msgEl.style.opacity = '0';
+    setTimeout(() => msgEl.style.display = 'none', 300);
 }
 
-/* ---------- eventy ---------- */
-window.addEventListener('hashchange', render);
+/* ---------- LIGHTBOX ---------- */
+const lbEl = document.getElementById('lightbox');
+const lbCenterWrapper = document.getElementById('lb-center-wrapper');
+const lbFolder = document.getElementById('lb-folder');
+const lbCounter = document.getElementById('lb-counter');
+const lbDesc = document.getElementById('lb-desc');
+const lbBody = document.getElementById('lb-body');
 
-document.addEventListener('keydown', e => {
-    if (e.key === 'Escape')
-        document.getElementById('lightbox').classList.remove('open');
+// Pomocnicza funkcja tworząca element do Lightboxa
+function createMediaElement(src, isVideo) {
+    let el;
+    if (isVideo) {
+        el = document.createElement('video');
+        el.src = src;
+        el.controls = true;
+        el.autoplay = true;
+    } else {
+        el = document.createElement('img');
+        el.src = src;
+    }
+    el.className = 'lb-media';
+    return el;
+}
+
+async function openLightbox(colIndex, imgIndex) {
+    currentColumnIndex = colIndex;
+    currentImageIndex = imgIndex;
+    lbEl.classList.add('open');
+    updateLightboxUI('none');
+}
+
+function closeLightbox() {
+    lbEl.classList.remove('open');
+    // Pauza wideo przed zamknięciem
+    if (lbCenterWrapper.firstElementChild && lbCenterWrapper.firstElementChild.tagName === 'VIDEO') {
+        lbCenterWrapper.firstElementChild.pause();
+    }
+    lbCenterWrapper.innerHTML = ''; 
+    document.querySelectorAll('.lb-clone').forEach(el => el.remove());
+}
+
+function changeImage(direction) {
+    const colData = galleryData[currentColumnIndex];
+    if (colData.images.length === 0) return;
+
+    let newIndex = currentImageIndex + direction;
+    if (newIndex < 0) newIndex = colData.images.length - 1;
+    if (newIndex >= colData.images.length) newIndex = 0;
+
+    currentImageIndex = newIndex;
+    updateLightboxUI(direction > 0 ? 'right' : 'left');
+}
+
+async function updateLightboxUI(direction) {
+    const colData = galleryData[currentColumnIndex];
+    const mediaData = colData.images[currentImageIndex];
+
+    lbFolder.textContent = colData.folder;
+    lbCounter.textContent = `${currentImageIndex + 1} / ${colData.images.length}`;
+
+    const oldMedia = lbCenterWrapper.firstElementChild;
+
+    if (direction !== 'none' && oldMedia) {
+        // Czyścimy trwające animacje jeśli gracz "spami" przyciski
+        document.querySelectorAll('.lb-clone').forEach(el => el.remove());
+
+        // 1. STARE MEDIA -> Odjeżdża z tyłu (Z-index: 20)
+        const oldClone = oldMedia.cloneNode(true);
+        oldClone.className = 'lb-clone';
+        if (oldClone.tagName === 'VIDEO') {
+            oldMedia.pause(); // Stop dźwięku w oryginale
+            oldClone.muted = true; // Klon też niemy
+            oldClone.removeAttribute('controls');
+        }
+        lbBody.appendChild(oldClone);
+
+        // 2. NOWE MEDIA GŁÓWNE -> Pojawia się natychmiast na wierzchu (Z-index: 40)
+        const newMedia = createMediaElement(mediaData.src, mediaData.isVideo);
+        lbCenterWrapper.innerHTML = ''; 
+        lbCenterWrapper.appendChild(newMedia); // Jest już na miejscu gotowe do oglądania
+
+        // 3. NOWE MEDIA KLON -> "Duch" nadlatujący z tyłu jako pęd (Z-index: 20)
+        const newClone = newMedia.cloneNode(true);
+        newClone.className = 'lb-clone';
+        if (newClone.tagName === 'VIDEO') {
+            newClone.muted = true; // Duch w tle jest bez dźwięku
+            newClone.removeAttribute('controls');
+        }
+        
+        // Ustawienie początkowej pozycji ducha za krawędzią ekranu
+        if (direction === 'right') {
+            newClone.style.transform = 'translateX(100vw) scale(0.6)';
+        } else {
+            newClone.style.transform = 'translateX(-100vw) scale(0.6)';
+        }
+        lbBody.appendChild(newClone);
+
+        // Przebudowanie DOM-u by aktywować animację CSS
+        void lbBody.offsetWidth;
+
+        // 4. ANIMACJA 
+        if (direction === 'right') {
+            oldClone.style.transform = 'translateX(-100vw) scale(0.6)';
+        } else {
+            oldClone.style.transform = 'translateX(100vw) scale(0.6)';
+        }
+        oldClone.style.opacity = '0';
+        
+        // Duch wjeżdża "za plecami" prawdziwego zdjęcia, by ostatecznie się z nim zrównać i schować
+        newClone.style.transform = 'translateX(0) scale(1)';
+
+        // Sprzątanie po 300 milisekundach (gdy zakończy się pęd)
+        setTimeout(() => {
+            if(oldClone.parentNode) oldClone.remove();
+            if(newClone.parentNode) newClone.remove();
+        }, 1000);
+
+    } else {
+        // Uruchomienie pierwsze (otwarcie po kliknięciu miniatury)
+        lbCenterWrapper.innerHTML = '';
+        lbCenterWrapper.appendChild(createMediaElement(mediaData.src, mediaData.isVideo));
+    }
+
+    // --- Pobieranie opisów plików ---
+    const currentReqId = ++descLoadId;
+    lbDesc.innerHTML = '';
+
+    if (mediaData.txtUrl) {
+        if (descCache[mediaData.txtUrl]) {
+            lbDesc.innerHTML = descCache[mediaData.txtUrl];
+        } else {
+            lbDesc.innerHTML = '<span class="lb-desc-loading">...</span>';
+            try {
+                const response = await fetch(mediaData.txtUrl);
+                const text = await response.text();
+                
+                if (currentReqId !== descLoadId) return; 
+
+                const formattedText = text.replace(/\n/g, '<br>'); 
+                descCache[mediaData.txtUrl] = formattedText;
+                lbDesc.innerHTML = formattedText;
+            } catch (e) {
+                if (currentReqId === descLoadId) {
+                    lbDesc.innerHTML = '<span style="color:#ff6b6b">Błąd wczytywania opisu. Upewnij się, że opisy mają to samo rozszerzenie .txt</span>';
+                }
+            }
+        }
+    } else {
+        lbDesc.innerHTML = '<span style="color:#555; font-style:italic">Brak opisu (stwórz plik .txt o tej samej nazwie).</span>';
+    }
+}
+
+// Obsługa dotykowa dla telefonów
+let touchStartX = 0;
+lbBody.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; });
+lbBody.addEventListener('touchend', e => {
+    let touchEndX = e.changedTouches[0].screenX;
+    if (touchStartX - touchEndX > 40) changeImage(1);
+    if (touchEndX - touchStartX > 40) changeImage(-1);
 });
 
+// Zapobieganie przesuwaniu strony strzałkami
+document.addEventListener('keydown', e => {
+    if (!lbEl.classList.contains('open')) return;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft' || e.key === 'Escape') { e.preventDefault(); }
+    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowRight') changeImage(1);
+    if (e.key === 'ArrowLeft') changeImage(-1);
+});
+
+window.addEventListener('hashchange', render);
 render();
 </script>
 </body>
