@@ -273,14 +273,17 @@
 
   /* Styl samego spinnera */
   .loader {
-    border: 8px solid #f3f3f3; /* Jasne tło kręgu */
-    border-top: 8px solid #3498db; /* Kolor elementu kręcącego się */
+    border: 8px solid #000000; /* Jasne tło kręgu */
+    border-top: 8px solid #ABAB77; /* Kolor elementu kręcącego się */
     border-radius: 50%;
     width: 50px;
     height: 50px;
     animation: spin 1s linear infinite;
     margin-bottom: 10px;
     position: absolute;
+    left: 30vw;
+    top: 85vh;
+
 
   /* Animacja obrotu */
   @keyframes spin {
@@ -346,7 +349,7 @@
 //               K O N F I G U R A C J A
 // ═══════════════════════════════════════════════
 const CONFIG = {
-    useLocalMock : false, // TRUE dla testów na dysku, FALSE dla GitHuba
+    useLocalMock : true, // TRUE dla testów na dysku, FALSE dla GitHuba
     githubUser : 'mickurepo',   
     githubRepo : 'gallery',      
     branch     : 'dev',           
@@ -354,16 +357,29 @@ const CONFIG = {
 };
 // ═══════════════════════════════════════════════
 
-// Dodana obsługa rozszerzeń filmowych
-const MEDIA_EXT = new Set(['jpg','jpeg','png','gif','webp','mp4','webm','ogg','mov']);
-const VIDEO_EXT = new Set(['mp4','webm','ogg','mov']);
+// Rozszerzenia mediów i wideo
+const MEDIA_EXT = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'webm', 'ogg', 'mov']);
+const VIDEO_EXT = new Set(['mp4', 'webm', 'ogg', 'mov']);
 
 let currentColumnIndex = 0;
 let currentImageIndex = 0;
-let galleryData = []; 
-let descCache = {};   
-let descLoadId = 0; 
-let localFileSystem = {}; 
+let galleryData = [];
+let descCache = {};
+let descLoadId = 0;
+let localFileSystem = {};
+
+// Czyści wcześniej utworzone object URL-e (zapobiega wyciekom pamięci)
+let activeObjectURLs = [];
+function revokeAllObjectURLs() {
+    activeObjectURLs.forEach(url => URL.revokeObjectURL(url));
+    activeObjectURLs = [];
+}
+
+function createObjectURL(file) {
+    const url = URL.createObjectURL(file);
+    activeObjectURLs.push(url);
+    return url;
+}
 
 function getFolders() {
     const hash = window.location.hash.slice(1);
@@ -371,79 +387,135 @@ function getFolders() {
     return hash.split(',').map(f => decodeURIComponent(f.trim())).filter(Boolean);
 }
 
-// Lokalny picker z dysku
+// ─── Lokalny picker z dysku ───
 document.getElementById('dir-picker').addEventListener('change', (e) => {
     const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    // Czyści poprzednie dane
+    revokeAllObjectURLs();
     localFileSystem = {};
-    
-    for (let file of files) {
-        const parts = file.webkitRelativePath.split('/');
-        if (parts.length >= 2) {
-            const folderName = parts[parts.length - 2]; 
-            const fileName = file.name;
-            const ext = fileName.split('.').pop().toLowerCase();
-            const baseName = fileName.substring(0, fileName.lastIndexOf('.')).toLowerCase();
 
-            if (!localFileSystem[folderName]) {
-                localFileSystem[folderName] = { media: [], txts: {} };
-            }
+    for (const file of files) {
+        const relativePath = file.webkitRelativePath;
+        if (!relativePath) continue;
 
-            if (MEDIA_EXT.has(ext)) {
-                localFileSystem[folderNtame].media.push({ file, isVideo: VIDEO_EXT.has(ext) });
-            } else if (ext === 'txt') {
-                localFileSystem[folderName].txts[baseName] = file;
-            }
+        const parts = relativePath.split('/');
+        // webkitRelativePath: "WybranyFolder/plik.png"
+        //                     "WybranyFolder/Subfolder/plik.png"
+        // Nas interesuje OSTATNI folder przed plikiem jako klucz
+        // oraz root folder (parts[0]) jako ewentualny klucz
+
+        if (parts.length < 2) continue;
+
+        // Folder bezpośrednio zawierający plik
+        const parentFolder = parts[parts.length - 2];
+        const fileName = file.name;
+        const dotIndex = fileName.lastIndexOf('.');
+
+        if (dotIndex === -1) continue; // brak rozszerzenia - pomijamy
+
+        const ext = fileName.substring(dotIndex + 1).toLowerCase();
+        const baseName = fileName.substring(0, dotIndex).toLowerCase();
+
+        if (!localFileSystem[parentFolder]) {
+            localFileSystem[parentFolder] = { mediaFiles: [], txtFiles: {} };
+        }
+
+        if (MEDIA_EXT.has(ext)) {
+            localFileSystem[parentFolder].mediaFiles.push({
+                file: file,
+                name: fileName,
+                isVideo: VIDEO_EXT.has(ext)
+            });
+        } else if (ext === 'txt') {
+            localFileSystem[parentFolder].txtFiles[baseName] = file;
         }
     }
-    render(); 
+
+    // Sortuj media w każdym folderze od razu po załadowaniu
+    for (const folder of Object.keys(localFileSystem)) {
+        localFileSystem[folder].mediaFiles.sort((a, b) =>
+            a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })
+        );
+    }
+
+    console.log('Załadowane foldery:', Object.keys(localFileSystem));
+    console.log('Zawartość:', Object.fromEntries(
+        Object.entries(localFileSystem).map(([k, v]) => [
+            k,
+            { media: v.mediaFiles.length, txts: Object.keys(v.txtFiles).length }
+        ])
+    ));
+
+    render();
 });
 
+// ─── Pobieranie danych folderu ───
 async function fetchFolderData(folder) {
-    if (CONFIG.useLocalMock) {
-        if (!localFileSystem[folder]) throw new Error(`Brak folderu "${folder}".`);
-        const folderData = localFileSystem[folder];
-        
-        // folderData.media.sort((a, b) => a.file.name.localeCompare(b.file.name, undefined, { numeric: true }));
 
-        return folderData.media.map(item => {
-            const baseName = item.file.name.substring(0, item.file.name.lastIndexOf('.')).toLowerCase();
-            const txtFile = folderData.txts[baseName];
+    // === TRYB LOKALNY ===
+    if (CONFIG.useLocalMock) {
+        const folderData = localFileSystem[folder];
+        if (!folderData) {
+            console.warn(`Dostępne foldery:`, Object.keys(localFileSystem));
+            throw new Error(`Brak folderu "${folder}". Dostępne: ${Object.keys(localFileSystem).join(', ')}`);
+        }
+
+        // mediaFiles już posortowane przy ładowaniu
+        return folderData.mediaFiles.map(item => {
+            const dotIndex = item.name.lastIndexOf('.');
+            const baseName = item.name.substring(0, dotIndex).toLowerCase();
+            const txtFile = folderData.txtFiles[baseName] || null;
+
             return {
-                src: URL.createObjectURL(item.file), 
-                txtUrl: txtFile ? URL.createObjectURL(txtFile) : null,
-                isVideo: item.isVideo
+                src: createObjectURL(item.file),
+                txtUrl: txtFile ? createObjectURL(txtFile) : null,
+                isVideo: item.isVideo,
+                name: item.name // przydatne do debugowania
             };
         });
     }
 
-    // 2. ODCZYT DOCELOWY Z GITHUB API
+    // === TRYB GITHUB API ===
     const path = CONFIG.basePath ? `${CONFIG.basePath}/${folder}` : folder;
     const apiPath = path.split('/').map(encodeURIComponent).join('/');
     const url = `https://api.github.com/repos/${CONFIG.githubUser}/${CONFIG.githubRepo}/contents/${apiPath}?ref=${CONFIG.branch}`;
 
     const res = await fetch(url);
-    if (!res.ok) throw new Error(`Brak folderu: ${folder}`);
+    if (!res.ok) throw new Error(`Brak folderu: ${folder} (HTTP ${res.status})`);
 
     const files = await res.json();
+
+    // Zbierz pliki .txt do mapy: baseName -> download_url
     const txtFiles = {};
-    
-    files.forEach(f => {
-        if (f.name.toLowerCase().endsWith('.txt')) {
-            const baseName = f.name.substring(0, f.name.lastIndexOf('.')).toLowerCase();
+    for (const f of files) {
+        const name = f.name;
+        if (name.toLowerCase().endsWith('.txt')) {
+            const baseName = name.substring(0, name.lastIndexOf('.')).toLowerCase();
             txtFiles[baseName] = f.download_url;
         }
-    });
+    }
 
+    // Filtruj media, sortuj, mapuj
     return files
-        .filter(f => f.type === 'file' && MEDIA_EXT.has(f.name.split('.').pop().toLowerCase()))
-        .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
+        .filter(f => {
+            if (f.type !== 'file') return false;
+            const dotIndex = f.name.lastIndexOf('.');
+            if (dotIndex === -1) return false;
+            const ext = f.name.substring(dotIndex + 1).toLowerCase();
+            return MEDIA_EXT.has(ext);
+        })
+        .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }))
         .map(f => {
-            const ext = f.name.split('.').pop().toLowerCase();
-            const baseName = f.name.substring(0, f.name.lastIndexOf('.')).toLowerCase();
-            return { 
-                src: f.download_url, 
+            const dotIndex = f.name.lastIndexOf('.');
+            const ext = f.name.substring(dotIndex + 1).toLowerCase();
+            const baseName = f.name.substring(0, dotIndex).toLowerCase();
+            return {
+                src: f.download_url,
                 txtUrl: txtFiles[baseName] || null,
-                isVideo: VIDEO_EXT.has(ext)
+                isVideo: VIDEO_EXT.has(ext),
+                name: f.name
             };
         });
 }
@@ -508,7 +580,7 @@ async function render() {
                 if (mediaItem.isVideo) {
                     mediaEl = document.createElement('video');
                     mediaEl.src = mediaItem.src;
-                    mediaEl.preload = 'metadata';
+                    mediaEl.preload = 'auto';
                     mediaEl.muted = true; // Wyciszony by móc załadować miniaturkę
                     mediaEl.onloadeddata = () => mediaEl.classList.add('loaded');
                 } else {
@@ -541,6 +613,134 @@ async function render() {
 
     msgEl.style.opacity = '0';
     setTimeout(() => msgEl.style.display = 'none', 300);
+}
+
+function createVideoThumbnail(mediaItem, wrapper, imgIndex, colIndex) {
+    const video = document.createElement('video');
+    video.src = mediaItem.src;
+    video.preload = 'metadata';
+    video.muted = true;
+    video.playsInline = true;
+    video.crossOrigin = 'anonymous';
+
+    let resolved = false;
+
+    function success() {
+        if (resolved) return;
+        resolved = true;
+
+        // Próba wygenerowania miniaturki na canvas → img
+        try {
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth || 320;
+            canvas.height = video.videoHeight || 180;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Sprawdź czy canvas nie jest pusty (czarny)
+            const pixel = ctx.getImageData(0, 0, 1, 1).data;
+            const isBlack = pixel[0] === 0 && pixel[1] === 0 && pixel[2] === 0;
+
+            if (!isBlack) {
+                // Canvas ma obraz - zamień video na img
+                const img = document.createElement('img');
+                img.src = canvas.toDataURL('image/jpeg', 0.7);
+                img.classList.add('loaded');
+                wrapper.replaceChild(img, wrapper.firstChild);
+            } else {
+                // Czarny obraz - zostaw video element
+                video.classList.add('loaded');
+            }
+        } catch (e) {
+            // Canvas fail (CORS itp.) - zostaw video
+            video.classList.add('loaded');
+        }
+
+        // Zwolnij pamięć - video nie jest potrzebne jako element DOM
+        video.removeAttribute('src');
+        video.load();
+    }
+
+    function fail() {
+        if (resolved) return;
+        resolved = true;
+
+        // Placeholder zamiast miniaturki
+        const placeholder = document.createElement('div');
+        placeholder.className = 'video-placeholder loaded';
+        placeholder.innerHTML = `
+            <svg viewBox="0 0 24 24" width="48" height="48">
+                <rect x="2" y="4" width="20" height="16" rx="2" fill="none" stroke="#888" stroke-width="1.5"/>
+                <polygon points="10,8 16,12 10,16" fill="#888"/>
+            </svg>
+            <span>${mediaItem.name || 'Video'}</span>
+        `;
+        wrapper.replaceChild(placeholder, wrapper.firstChild);
+    }
+
+    video.addEventListener('loadedmetadata', () => {
+        video.currentTime = Math.min(0.5, video.duration || 0.5);
+    });
+
+    video.addEventListener('seeked', success);
+    video.addEventListener('error', fail);
+
+    // Timeout - jeśli nic nie zadziała w 5s
+    setTimeout(fail, 5000);
+
+    wrapper.appendChild(video);
+}
+
+function generateVideoThumb(src) {
+    return new Promise((resolve) => {
+        const video = document.createElement('video');
+        video.preload = 'auto';
+        video.muted = true;
+        video.playsInline = true;
+        video.crossOrigin = 'anonymous';
+
+        const timeout = setTimeout(() => {
+            // Po 5s poddajemy się — zwracamy null
+            cleanup();
+            resolve(null);
+        }, 5000);
+
+        function cleanup() {
+            clearTimeout(timeout);
+            video.removeAttribute('src');
+            video.load();
+        }
+
+        video.onloadeddata = () => {
+            // Seek do 0.5s lub 10% filmu
+            video.currentTime = Math.min(0.5, video.duration * 0.1 || 0);
+        };
+
+        video.onseeked = () => {
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth || 320;
+                canvas.height = video.videoHeight || 240;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                cleanup();
+                resolve(dataUrl);
+            } catch (e) {
+                console.warn('Canvas capture failed:', src, e);
+                cleanup();
+                resolve(null);
+            }
+        };
+
+        video.onerror = () => {
+            console.warn('Video decode error:', src);
+            cleanup();
+            resolve(null);
+        };
+
+        video.src = src;
+    });
 }
 
 /* ---------- LIGHTBOX ---------- */
