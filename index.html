@@ -224,19 +224,18 @@
 
 
 /* ---------- EKRAN POWITALNY ---------- */
-        #message {
-            /*position: fixed;*/
-            inset: 0;
-            background: rgb(0, 0, 0);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            text-align: center;
-            /*padding: 20px;*/
-            z-index: 50;
-            transition: opacity 0.3s ease;
-        }
+#message {
+    position: fixed;    /* Kluczowa zmiana: przypina do okna (viewport) */
+    inset: 0;           /* Rozciąga do krawędzi: top, right, bottom, left = 0 */
+    background: rgb(0, 0, 0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    z-index: 1000;      /* Bardzo wysoki z-index, by na pewno był nad galerią */
+    transition: opacity 1.5s ease, visibility 1.5s; /* Dodajemy visibility dla pewności */
+}
 
         .pulse-text {
             font-size: 2.4em;
@@ -290,6 +289,7 @@
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
   }
+
     </style>
 </head>
 <body>
@@ -348,8 +348,9 @@
 // ═══════════════════════════════════════════════
 //               K O N F I G U R A C J A
 // ═══════════════════════════════════════════════
+window.location.hash = "it,3d,electro,cnc";
 const CONFIG = {
-    useLocalMock : false, // TRUE dla testów na dysku, FALSE dla GitHuba
+    useLocalMock : true, // TRUE dla testów na dysku, FALSE dla GitHuba
     githubUser : 'mickurepo',   
     githubRepo : 'gallery',      
     branch     : 'dev',           
@@ -565,31 +566,48 @@ async function render() {
         return col;
     });
 
-    for (let i = 0; i < folders.length; i++) {
-        const folder = folders[i];
-        try {
-            const mediaList = await fetchFolderData(folder);
-            galleryData.push({ folder, images: mediaList });
+const allMediaPromises = []; // Tablica na obietnice ładowania
 
-            mediaList.forEach((mediaItem, imgIndex) => {
-                const wrapper = document.createElement('div');
-                wrapper.className = 'img-wrapper';
-                wrapper.onclick = () => openLightbox(i, imgIndex);
+for (let i = 0; i < folders.length; i++) {
+    const folder = folders[i];
+    try {
+        const mediaList = await fetchFolderData(folder);
+        galleryData.push({ folder, images: mediaList });
 
-                let mediaEl;
+        mediaList.forEach((mediaItem, imgIndex) => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'img-wrapper';
+            wrapper.onclick = () => openLightbox(i, imgIndex);
+
+            let mediaEl;
+            
+            // Tworzymy obietnicę dla tego konkretnego elementu
+            const loadPromise = new Promise((resolve) => {
                 if (mediaItem.isVideo) {
                     mediaEl = document.createElement('video');
                     mediaEl.src = mediaItem.src;
                     mediaEl.preload = 'auto';
-                    mediaEl.muted = true; // Wyciszony by móc załadować miniaturkę
-                    mediaEl.onloadeddata = () => mediaEl.classList.add('loaded');
+                    mediaEl.muted = true;
+                    // Dla wideo czekamy na onloadeddata (klatka załadowana)
+                    mediaEl.onloadeddata = () => {
+                        mediaEl.classList.add('loaded');
+                        resolve();
+                    };
+                    mediaEl.onerror = resolve; // Kontynuuj nawet przy błędzie
                 } else {
                     mediaEl = document.createElement('img');
                     mediaEl.src = mediaItem.src;
-                    mediaEl.loading = 'lazy';
-                    mediaEl.onload = () => mediaEl.classList.add('loaded');
+                    // UWAGA: usuń 'lazy', jeśli chcesz, by ładowanie zaczęło się od razu!
+                    mediaEl.onload = () => {
+                        mediaEl.classList.add('loaded');
+                        resolve();
+                    };
+                    mediaEl.onerror = resolve;
                 }
-                wrapper.appendChild(mediaEl);
+            });
+
+            allMediaPromises.push(loadPromise); // Dodajemy do głównej listy
+            wrapper.appendChild(mediaEl);
 
             // Nakładamy ikonkę SVG na filmy
             if (mediaItem.isVideo) {
@@ -611,8 +629,15 @@ async function render() {
         }
     }
 
+// PO PĘTLI: Czekamy na wszystko i gasimy msgEl
+Promise.all(allMediaPromises).then(() => {
     msgEl.style.opacity = '0';
-    setTimeout(() => msgEl.style.display = 'none', 300);
+    setTimeout(() => {
+        msgEl.style.display = 'none';
+        // Tutaj opcjonalne przekierowanie, o którym pisałeś wcześniej:
+        // window.location.replace(window.location.href + "#i1,i2,i3");
+    }, 300);
+});
 }
 
 function createVideoThumbnail(mediaItem, wrapper, imgIndex, colIndex) {
@@ -703,7 +728,7 @@ function generateVideoThumb(src) {
             // Po 5s poddajemy się — zwracamy null
             cleanup();
             resolve(null);
-        }, 5000);
+        }, 10000);
 
         function cleanup() {
             clearTimeout(timeout);
