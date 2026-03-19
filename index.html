@@ -234,7 +234,7 @@
     flex-direction: column;
     text-align: center;
     z-index: 1000;      /* Bardzo wysoki z-index, by na pewno był nad galerią */
-    transition: opacity 1.5s ease, visibility 1.5s; /* Dodajemy visibility dla pewności */
+    transition: opacity 2s ease, visibility 2s; /* Dodajemy visibility dla pewności */
 }
 
         .pulse-text {
@@ -289,6 +289,51 @@
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
   }
+
+
+
+  #load-progress-container {
+    width: 80%;
+    max-width: 400px;
+    margin: 20px auto 0;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    height: 24px;
+}
+
+#load-progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #e63946, #ff6b6b, #e63946);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 12px;
+    transition: width 0.3s ease;
+}
+
+#load-progress-text {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: white;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    pointer-events: none;
+}
+
+@keyframes shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
 
     </style>
 </head>
@@ -553,10 +598,26 @@ async function render() {
     msgSpinner.style.display = 'block';
     document.getElementById('msg-title').innerText = "📷 Galeria";
 
+    // ========== PROGRESSBAR - tworzenie ==========
+    let progressBar = document.getElementById('load-progress-bar');
+    if (!progressBar) {
+        const progressContainer = document.createElement('div');
+        progressContainer.id = 'load-progress-container';
+        progressContainer.innerHTML = `
+            <div id="load-progress-bar"></div>
+            <div id="load-progress-text">0%</div>
+        `;
+        msgSpinner.parentElement.appendChild(progressContainer);
+        progressBar = document.getElementById('load-progress-bar');
+    }
+    const progressText = document.getElementById('load-progress-text');
+    progressBar.style.width = '0%';
+    progressText.textContent = '0%';
+
     const columns = folders.map(folder => {
         const col = document.createElement('div');
         col.className = 'column';
-        
+
         const header = document.createElement('div');
         header.className = 'column-header';
         header.textContent = folder;
@@ -566,60 +627,80 @@ async function render() {
         return col;
     });
 
-const allMediaPromises = []; // Tablica na obietnice ładowania
+    // ========== Zbieranie WSZYSTKICH obietnic ==========
+    const allMediaPromises = [];
+    let totalMedia = 0;
+    let loadedMedia = 0;
 
-for (let i = 0; i < folders.length; i++) {
-    const folder = folders[i];
-    try {
-        const mediaList = await fetchFolderData(folder);
-        galleryData.push({ folder, images: mediaList });
+    function updateProgress() {
+        loadedMedia++;
+        const percent = Math.round((loadedMedia / totalMedia) * 100);
+        progressBar.style.width = percent + '%';
+        progressText.textContent = `${loadedMedia} / ${totalMedia} (${percent}%)`;
+    }
 
-        mediaList.forEach((mediaItem, imgIndex) => {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'img-wrapper';
-            wrapper.onclick = () => openLightbox(i, imgIndex);
+    for (let i = 0; i < folders.length; i++) {
+        const folder = folders[i];
+        try {
+            const mediaList = await fetchFolderData(folder);
+            galleryData.push({ folder, images: mediaList });
 
-            let mediaEl;
-            
-            // Tworzymy obietnicę dla tego konkretnego elementu
-            const loadPromise = new Promise((resolve) => {
+            // Najpierw zliczamy WSZYSTKIE media żeby progressbar wiedział ile jest łącznie
+            totalMedia += mediaList.length;
+
+            mediaList.forEach((mediaItem, imgIndex) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'img-wrapper';
+                wrapper.onclick = () => openLightbox(i, imgIndex);
+
+                let mediaEl;
+
+                // ===== Tworzymy OBIETNICĘ dla każdego elementu =====
+                const loadPromise = new Promise((resolve) => {
+                    if (mediaItem.isVideo) {
+                        mediaEl = document.createElement('video');
+                        mediaEl.src = mediaItem.src;
+                        mediaEl.preload = 'auto';
+                        mediaEl.muted = true;
+                        mediaEl.onloadeddata = () => {
+                            mediaEl.classList.add('loaded');
+                            updateProgress();
+                            resolve();
+                        };
+                        mediaEl.onerror = () => {
+                            updateProgress();
+                            resolve(); // resolve nawet przy błędzie, żeby nie blokować
+                        };
+                    } else {
+                        mediaEl = document.createElement('img');
+                        mediaEl.src = mediaItem.src;
+                        mediaEl.loading = 'eager'; // ← WAŻNE: 'lazy' nie triggeruje onload dla niewidocznych!
+                        mediaEl.onload = () => {
+                            mediaEl.classList.add('loaded');
+                            updateProgress();
+                            resolve();
+                        };
+                        mediaEl.onerror = () => {
+                            updateProgress();
+                            resolve();
+                        };
+                    }
+                });
+
+                allMediaPromises.push(loadPromise); // ← TO BRAKOWAŁO
+
+                wrapper.appendChild(mediaEl);
+
                 if (mediaItem.isVideo) {
-                    mediaEl = document.createElement('video');
-                    mediaEl.src = mediaItem.src;
-                    mediaEl.preload = 'auto';
-                    mediaEl.muted = true;
-                    // Dla wideo czekamy na onloadeddata (klatka załadowana)
-                    mediaEl.onloadeddata = () => {
-                        mediaEl.classList.add('loaded');
-                        resolve();
-                    };
-                    mediaEl.onerror = resolve; // Kontynuuj nawet przy błędzie
-                } else {
-                    mediaEl = document.createElement('img');
-                    mediaEl.src = mediaItem.src;
-                    // UWAGA: usuń 'lazy', jeśli chcesz, by ładowanie zaczęło się od razu!
-                    mediaEl.onload = () => {
-                        mediaEl.classList.add('loaded');
-                        resolve();
-                    };
-                    mediaEl.onerror = resolve;
+                    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                    svg.setAttribute("class", "play-icon");
+                    svg.setAttribute("viewBox", "0 0 24 24");
+                    svg.innerHTML = `
+                        <circle cx="12" cy="12" r="10" fill="#e63946" stroke="white" stroke-width="1"></circle>
+                        <polygon points="10,8 16,12 10,16" fill="white"></polygon>
+                    `;
+                    wrapper.appendChild(svg);
                 }
-            });
-
-            allMediaPromises.push(loadPromise); // Dodajemy do głównej listy
-            wrapper.appendChild(mediaEl);
-
-            // Nakładamy ikonkę SVG na filmy
-            if (mediaItem.isVideo) {
-                const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-                svg.setAttribute("class", "play-icon");
-                svg.setAttribute("viewBox", "0 0 24 24");
-                svg.innerHTML = `
-                    <circle cx="12" cy="12" r="10" fill="#e63946" stroke="white" stroke-width="1"></circle>
-                    <polygon points="10,8 16,12 10,16" fill="white"></polygon>
-                `;
-                wrapper.appendChild(svg);
-            }
 
                 columns[i].appendChild(wrapper);
             });
@@ -629,15 +710,33 @@ for (let i = 0; i < folders.length; i++) {
         }
     }
 
-// PO PĘTLI: Czekamy na wszystko i gasimy msgEl
-Promise.all(allMediaPromises).then(() => {
+    // ========== Czekamy na WSZYSTKO, potem gasimy ekran ==========
+    if (allMediaPromises.length === 0) {
+        // Brak mediów — od razu chowamy
+        msgEl.style.display = 'none';
+        return;
+    }
+
+    // Timeout zabezpieczający — max 30s czekania
+    const timeout = new Promise(resolve => setTimeout(resolve, 30000));
+
+    await Promise.race([
+        Promise.all(allMediaPromises),
+        timeout
+    ]);
+
+    // Płynne zniknięcie
+    progressBar.style.width = '100%';
+    progressText.textContent = '100% ✓';
+
+    await new Promise(r => setTimeout(r, 500)); // chwila na zobaczenie 100%
+
+    msgEl.style.transition = 'opacity 0.6s ease';
     msgEl.style.opacity = '0';
+
     setTimeout(() => {
         msgEl.style.display = 'none';
-        // Tutaj opcjonalne przekierowanie, o którym pisałeś wcześniej:
-        // window.location.replace(window.location.href + "#i1,i2,i3");
-    }, 300);
-});
+    }, 600);
 }
 
 function createVideoThumbnail(mediaItem, wrapper, imgIndex, colIndex) {
