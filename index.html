@@ -394,7 +394,8 @@
 //               K O N F I G U R A C J A
 // ═══════════════════════════════════════════════
 // window.location.hash = "it,3d,electro,cnc";
-window.location.replace("https://mickurepo.github.io/gallery/#it,3d,electro,cnc");
+// window.location.replace("https://mickurepo.github.io/gallery/#it,3d,electro,cnc");
+const DEFAULT_FOLDERS = ['it', '3d', 'electro', 'cnc'];
 const CONFIG = {
     useLocalMock : false, // TRUE dla testów na dysku, FALSE dla GitHuba
     githubUser : 'mickurepo',   
@@ -430,7 +431,7 @@ function createObjectURL(file) {
 
 function getFolders() {
     const hash = window.location.hash.slice(1);
-    if (!hash) return [];
+    if (!hash) return DEFAULT_FOLDERS;
     return hash.split(',').map(f => decodeURIComponent(f.trim())).filter(Boolean);
 }
 
@@ -588,14 +589,14 @@ async function render() {
 
     if (CONFIG.useLocalMock && Object.keys(localFileSystem).length === 0) {
         msgContent.style.display = 'none';
-        msgSpinner.style.display = 'none';
+        msgSpinner.style.display = 'block';
         localPicker.style.display = 'block';
         document.getElementById('msg-title').innerText = "Odczyt z Dysku";
         return;
     }
 
     msgContent.style.display = 'none';
-    localPicker.style.display = 'none';
+    localPicker.style.display = 'block';
     msgSpinner.style.display = 'block';
     document.getElementById('msg-title').innerText = "📷 Galeria";
 
