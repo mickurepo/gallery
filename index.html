@@ -208,15 +208,26 @@
         }
 
         .spinner {
-            margin: 60px auto;
+            margin: 10px auto;
             width: 40px;
             height: 40px;
             border: 4px solid #444;
-            border-top-color: #fff;
+            border-top-color: #FFF;
             border-radius: 50%;
             animation: spin .8s linear infinite;
+/*            top: 70vh;
+            left: 67vw;
+            position: absolute;*/
+
         }
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        #spinnerAndProgressbar{
+            top: 70vh;
+            left: 67vw;
+            position: absolute;
+            width: 100px;
+        }
 
 
 
@@ -343,13 +354,13 @@
 
 
     <div class="loader-container">
-      <div class="loader"></div>
+      <!-- <div class="loader"></div> -->
       <img src="images/welcome.png">
     </div>
 
 
 
-    <div class="pulse-text" id="msg-title">📷 Galeria</div>
+    <div class="pulse-text" id="msg-title" style="display:none;">📷 Galeria</div>
     
     <div id="msg-content" style="display:none;">
         <p>Dodaj nazwy folderów po <strong>#</strong> w adresie URL:</p>
@@ -358,15 +369,17 @@
         </code>
     </div>
 
-    <div id="local-picker-container">
-        <p style="margin-bottom: 12px; font-weight: bold; color: #4fc3f7;">TRYB TESTÓW LOKALNYCH</p>
+    <div id="local-picker-container" style="position: absolute; right: 5vw;">
+        <p style="margin-bottom: 50px; font-weight: bold; color: #4fc3f7;">TRYB TESTÓW LOKALNYCH</p>
         <p style="font-size: 0.9em; color:#ddd; margin-bottom: 15px;">
             Wybierz poniżej folder główny (zawierający podfoldery),<br>aby załadować zdjęcia, <b>filmy</b> i opisy z dysku.
         </p>
         <input type="file" id="dir-picker" webkitdirectory directory multiple style="background:#222; padding:10px; border-radius:5px; color:#fff; cursor:pointer;">
     </div>
 
-    <div id="msg-spinner" class="spinner"></div>
+    <div id="spinnerAndProgressbar">
+        <div id="msg-spinner" class="spinner"></div>
+    </div>
 </div>
 
 <div id="gallery"></div>
@@ -395,9 +408,11 @@
 // ═══════════════════════════════════════════════
 // window.location.hash = "it,3d,electro,cnc";
 // window.location.replace("https://mickurepo.github.io/gallery/#it,3d,electro,cnc");
+// const IS_LOCAL = window.location.href.startsWith('file:///');
 const DEFAULT_FOLDERS = ['it', '3d', 'electro', 'cnc'];
 const CONFIG = {
-    useLocalMock : false, // TRUE dla testów na dysku, FALSE dla GitHuba
+    // useLocalMock : false, // TRUE dla testów na dysku, FALSE dla GitHuba
+    useLocalMock: window.location.href.startsWith('file:///'),
     githubUser : 'mickurepo',   
     githubRepo : 'gallery',      
     branch     : 'dev',           
@@ -596,7 +611,7 @@ async function render() {
     }
 
     msgContent.style.display = 'none';
-    localPicker.style.display = 'block';
+    localPicker.style.display = 'none';
     msgSpinner.style.display = 'block';
     document.getElementById('msg-title').innerText = "📷 Galeria";
 
