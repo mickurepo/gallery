@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,7 +20,7 @@
             overflow-x: hidden;
         }
 
-        
+
 
         /* ---------- GALERIA ---------- */
         #gallery {
@@ -50,11 +51,12 @@
             position: sticky;
             top: 15px;
             z-index: 10;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
         .img-wrapper {
-            position: relative; /* Wymagane dla pozycjonowania SVG */
+            position: relative;
+            /* Wymagane dla pozycjonowania SVG */
             background: rgb(85, 85, 85);
             /*padding: 8px;*/
             /*border-radius: 12px;*/
@@ -65,21 +67,26 @@
 
         }
 
-        .img-wrapper img, .img-wrapper video {
+        .img-wrapper img,
+        .img-wrapper video {
             width: 100%;
             display: block;
             /*border-radius: 6px;*/
             opacity: 0;
             transition: opacity 0.5s ease, transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
-        .img-wrapper img.loaded, .img-wrapper video.loaded {
+
+        .img-wrapper img.loaded,
+        .img-wrapper video.loaded {
             opacity: 1;
         }
 
         .img-wrapper:hover {
             box-shadow: 0 12px 25px rgba(0, 0, 0, 0.6);
         }
-        .img-wrapper:hover img, .img-wrapper:hover video {
+
+        .img-wrapper:hover img,
+        .img-wrapper:hover video {
             transform: scale(1.06);
         }
 
@@ -91,10 +98,12 @@
             transform: translate(-50%, -50%);
             width: 100px;
             height: 100px;
-            pointer-events: none; /* Kliknięcie przechodzi przez ikonę do wrappera */
+            pointer-events: none;
+            /* Kliknięcie przechodzi przez ikonę do wrappera */
             opacity: 0.6;
             transition: transform 0.3s ease, opacity 0.3s ease;
         }
+
         .img-wrapper:hover .play-icon {
             transform: translate(-50%, -50%) scale(1.15);
             opacity: 1;
@@ -109,7 +118,10 @@
             z-index: 1000;
             flex-direction: column;
         }
-        #lightbox.open { display: flex; }
+
+        #lightbox.open {
+            display: flex;
+        }
 
         .lb-header {
             display: flex;
@@ -120,16 +132,31 @@
             font-size: 1.2em;
             z-index: 60;
         }
-        .lb-folder { font-weight: bold; color: #4fc3f7; }
-        .lb-counter { 
-            font-family: monospace; 
-            font-size: 1.2em; 
-            background: #333; 
-            padding: 5px 12px; 
+
+        .lb-folder {
+            font-weight: bold;
+            color: #4fc3f7;
+        }
+
+        .lb-counter {
+            font-family: monospace;
+            font-size: 1.2em;
+            background: #333;
+            padding: 5px 12px;
             /*border-radius: 20px;*/
         }
-        .lb-close { cursor: pointer; font-size: 2em; line-height: 1; color: #bbb; z-index: 60;}
-        .lb-close:hover { color: #fff; }
+
+        .lb-close {
+            cursor: pointer;
+            font-size: 2em;
+            line-height: 1;
+            color: #bbb;
+            z-index: 60;
+        }
+
+        .lb-close:hover {
+            color: #fff;
+        }
 
         .lb-body {
             flex: 1;
@@ -139,12 +166,12 @@
             position: relative;
             overflow: hidden;
         }
-        
+
         .lb-nav {
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
-            background: rgba(255,255,255,0.1);
+            background: rgba(255, 255, 255, 0.1);
             color: white;
             border: none;
             font-size: 2em;
@@ -152,17 +179,27 @@
             cursor: pointer;
             border-radius: 8px;
             transition: background 0.2s;
-            z-index: 50; 
+            z-index: 50;
         }
-        .lb-nav:hover { background: rgba(255,255,255,0.3); }
-        .lb-nav.prev { left: 20px; }
-        .lb-nav.next { right: 20px; }
+
+        .lb-nav:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .lb-nav.prev {
+            left: 20px;
+        }
+
+        .lb-nav.next {
+            right: 20px;
+        }
 
         /* ---------- NOWA LOGIKA WARSTW W LIGHTBOXIE ---------- */
-        
+
         #lb-center-wrapper {
             position: relative;
-            z-index: 40; /* ZAWSZE NA WIERZCHU */
+            z-index: 40;
+            /* ZAWSZE NA WIERZCHU */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -173,20 +210,20 @@
             max-height: 90vh;
             object-fit: contain;
             border-radius: 1px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
         }
 
         .lb-clone {
-            position: absolute; 
+            position: absolute;
             max-width: 85vw;
             max-height: 85vh;
             object-fit: contain;
             border-radius: 8px;
-            pointer-events: none; 
+            pointer-events: none;
             transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.5s ease;
-            z-index: 20; 
+            z-index: 20;
             /* NOWE: Duchy są w 70% przezroczyste podczas ruchu */
-            opacity: 0.2; 
+            opacity: 0.2;
         }
 
         .lb-footer {
@@ -198,13 +235,17 @@
             color: #ddd;
             z-index: 60;
         }
+
         .lb-desc-loading {
-            color: #888; font-style: italic; font-size: 0.9em;
+            color: #888;
+            font-style: italic;
+            font-size: 0.9em;
+
             video::-webkit-media-controls-panel {
-            display: flex !important;
-            opacity: 1 !important;
-            visibility: visible !important;
-}
+                display: flex !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+            }
         }
 
         .spinner {
@@ -215,14 +256,19 @@
             border-top-color: #FFF;
             border-radius: 50%;
             animation: spin .8s linear infinite;
-/*            top: 70vh;
+            /*            top: 70vh;
             left: 67vw;
             position: absolute;*/
 
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
 
-        #spinnerAndProgressbar{
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        #spinnerAndProgressbar {
             top: 70vh;
             left: 67vw;
             position: absolute;
@@ -234,19 +280,23 @@
 
 
 
-/* ---------- EKRAN POWITALNY ---------- */
-#message {
-    position: fixed;    /* Kluczowa zmiana: przypina do okna (viewport) */
-    inset: 0;           /* Rozciąga do krawędzi: top, right, bottom, left = 0 */
-    background: rgb(0, 0, 0);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    text-align: center;
-    z-index: 1000;      /* Bardzo wysoki z-index, by na pewno był nad galerią */
-    transition: opacity 2s ease, visibility 2s; /* Dodajemy visibility dla pewności */
-}
+        /* ---------- EKRAN POWITALNY ---------- */
+        #message {
+            position: fixed;
+            /* Kluczowa zmiana: przypina do okna (viewport) */
+            inset: 0;
+            /* Rozciąga do krawędzi: top, right, bottom, left = 0 */
+            background: rgb(0, 0, 0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            z-index: 1000;
+            /* Bardzo wysoki z-index, by na pewno był nad galerią */
+            transition: opacity 2s ease, visibility 2s;
+            /* Dodajemy visibility dla pewności */
+        }
 
         .pulse-text {
             font-size: 2.4em;
@@ -256,806 +306,832 @@
         }
 
         @keyframes pulse-glow {
-            0% { text-shadow: 0 0 5px rgba(255, 255, 255, 0.2); transform: scale(1); }
-            50% { text-shadow: 0 0 25px rgba(255, 255, 255, 0.8); transform: scale(1.02); }
-            100% { text-shadow: 0 0 5px rgba(255, 255, 255, 0.2); transform: scale(1); }
+            0% {
+                text-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
+                transform: scale(1);
+            }
+
+            50% {
+                text-shadow: 0 0 25px rgba(255, 255, 255, 0.8);
+                transform: scale(1.02);
+            }
+
+            100% {
+                text-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
+                transform: scale(1);
+            }
         }
 
         #local-picker-container {
             display: none;
             margin-top: 25px;
-            background: rgba(0,0,0,0.2);
+            background: rgba(0, 0, 0, 0.2);
             padding: 20px;
             /*border-radius: 12px;*/
             border: 1px dashed #777;
         }
 
 
-          /* Kontener wyrównujący loader na środku */
-  .loader-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-family: sans-serif;
-    color: #555;
-  }
+        /* Kontener wyrównujący loader na środku */
+        .loader-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: sans-serif;
+            color: #555;
+        }
 
-  /* Styl samego spinnera */
-  .loader {
-    border: 8px solid #000000; /* Jasne tło kręgu */
-    border-top: 8px solid #ABAB77; /* Kolor elementu kręcącego się */
-    border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    animation: spin 1s linear infinite;
-    margin-bottom: 10px;
-    position: absolute;
-    left: 30vw;
-    top: 85vh;
-
-
-  /* Animacja obrotu */
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
+        /* Styl samego spinnera */
+        .loader {
+            border: 8px solid #000000;
+            /* Jasne tło kręgu */
+            border-top: 8px solid #ABAB77;
+            /* Kolor elementu kręcącego się */
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 10px;
+            position: absolute;
+            left: 30vw;
+            top: 85vh;
 
 
+            /* Animacja obrotu */
+            @keyframes spin {
+                0% {
+                    transform: rotate(0deg);
+                }
 
-  #load-progress-container {
-    width: 80%;
-    max-width: 400px;
-    margin: 20px auto 0;
-    text-align: center;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    overflow: hidden;
-    position: relative;
-    height: 24px;
-}
+                100% {
+                    transform: rotate(360deg);
+                }
+            }
 
-#load-progress-bar {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, #e63946, #ff6b6b, #e63946);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-    border-radius: 12px;
-    transition: width 0.3s ease;
-}
 
-#load-progress-text {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: 600;
-    color: white;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
-    pointer-events: none;
-}
 
-@keyframes shimmer {
-    0%   { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-}
+            #load-progress-container {
+                width: 80%;
+                max-width: 400px;
+                margin: 20px auto 0;
+                text-align: center;
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 12px;
+                overflow: hidden;
+                position: relative;
+                height: 24px;
+            }
 
+            #load-progress-bar {
+                height: 100%;
+                width: 0%;
+                background: linear-gradient(90deg, #e63946, #ff6b6b, #e63946);
+                background-size: 200% 100%;
+                animation: shimmer 1.5s infinite;
+                border-radius: 12px;
+                transition: width 0.3s ease;
+            }
+
+            #load-progress-text {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 12px;
+                font-weight: 600;
+                color: white;
+                text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+                pointer-events: none;
+            }
+
+            @keyframes shimmer {
+                0% {
+                    background-position: 200% 0;
+                }
+
+                100% {
+                    background-position: -200% 0;
+                }
+            }
     </style>
 </head>
+
 <body>
 
-<div id="message">
+    <div id="message">
 
 
-    <div class="loader-container">
-      <!-- <div class="loader"></div> -->
-      <img src="images/welcome.png">
-    </div>
+        <div class="loader-container">
+            <!-- <div class="loader"></div> -->
+            <img src="images/welcome.png">
+        </div>
 
 
 
-    <div class="pulse-text" id="msg-title" style="display:none;">📷 Galeria</div>
-    
-    <div id="msg-content" style="display:none;">
-        <p>Dodaj nazwy folderów po <strong>#</strong> w adresie URL:</p>
-        <code style="background: #222; padding: 10px; border-radius: 6px; display: block; margin: 15px 0;">
+        <div class="pulse-text" id="msg-title" style="display:none;">📷 Galeria</div>
+
+        <div id="msg-content" style="display:none;">
+            <p>Dodaj nazwy folderów po <strong>#</strong> w adresie URL:</p>
+            <code style="background: #222; padding: 10px; border-radius: 6px; display: block; margin: 15px 0;">
             #folder1,folder2
         </code>
+        </div>
+
+        <div id="local-picker-container" style="position: absolute; right: 5vw;">
+            <p style="margin-bottom: 50px; font-weight: bold; color: #4fc3f7;">TRYB TESTÓW LOKALNYCH</p>
+            <p style="font-size: 0.9em; color:#ddd; margin-bottom: 15px;">
+                Wybierz poniżej folder główny (zawierający podfoldery),<br>aby załadować zdjęcia, <b>filmy</b> i opisy z
+                dysku.
+            </p>
+            <input type="file" id="dir-picker" webkitdirectory directory multiple
+                style="background:#222; padding:10px; border-radius:5px; color:#fff; cursor:pointer;">
+        </div>
+
+        <div id="spinnerAndProgressbar">
+            <div id="msg-spinner" class="spinner"></div>
+        </div>
     </div>
 
-    <div id="local-picker-container" style="position: absolute; right: 5vw;">
-        <p style="margin-bottom: 50px; font-weight: bold; color: #4fc3f7;">TRYB TESTÓW LOKALNYCH</p>
-        <p style="font-size: 0.9em; color:#ddd; margin-bottom: 15px;">
-            Wybierz poniżej folder główny (zawierający podfoldery),<br>aby załadować zdjęcia, <b>filmy</b> i opisy z dysku.
-        </p>
-        <input type="file" id="dir-picker" webkitdirectory directory multiple style="background:#222; padding:10px; border-radius:5px; color:#fff; cursor:pointer;">
+    <div id="gallery"></div>
+
+    <!-- LIGHTBOX -->
+    <div id="lightbox">
+        <div class="lb-header">
+            <div class="lb-folder" id="lb-folder">Nazwa Folderu</div>
+            <div class="lb-counter" id="lb-counter">1/5</div>
+            <div class="lb-close" onclick="closeLightbox()">&times;</div>
+        </div>
+
+        <div class="lb-body" id="lb-body">
+            <button class="lb-nav prev" onclick="changeImage(-1)">&#10094;</button>
+            <!-- Zmieniony kontener centralny - przyjmuje filmy i zdjęcia -->
+            <div id="lb-center-wrapper"></div>
+            <button class="lb-nav next" onclick="changeImage(1)">&#10095;</button>
+        </div>
+
+        <div class="lb-footer" id="lb-desc"></div>
     </div>
 
-    <div id="spinnerAndProgressbar">
-        <div id="msg-spinner" class="spinner"></div>
-    </div>
-</div>
+    <script>
+        // ═══════════════════════════════════════════════
+        //               K O N F I G U R A C J A
+        // ═══════════════════════════════════════════════
+        // window.location.hash = "it,3d,electro,cnc";
+        // window.location.replace("https://mickurepo.github.io/gallery/#it,3d,electro,cnc");
+        // const IS_LOCAL = window.location.href.startsWith('file:///');
+        const DEFAULT_FOLDERS = ['it', '3d', 'electro', 'cnc'];
+        const CONFIG = {
+            // useLocalMock : false, // TRUE dla testów na dysku, FALSE dla GitHuba
+            useLocalMock: window.location.href.startsWith('file:///'),
+            githubUser: 'mickurepo',
+            githubRepo: 'gallery',
+            branch: 'dev',
+            basePath: 'images'
+        };
+        // ═══════════════════════════════════════════════
 
-<div id="gallery"></div>
+        // Rozszerzenia mediów i wideo
+        const MEDIA_EXT = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'webm', 'ogg', 'mov']);
+        const VIDEO_EXT = new Set(['mp4', 'webm', 'ogg', 'mov']);
 
-<!-- LIGHTBOX -->
-<div id="lightbox">
-    <div class="lb-header">
-        <div class="lb-folder" id="lb-folder">Nazwa Folderu</div>
-        <div class="lb-counter" id="lb-counter">1/5</div>
-        <div class="lb-close" onclick="closeLightbox()">&times;</div>
-    </div>
-    
-    <div class="lb-body" id="lb-body">
-        <button class="lb-nav prev" onclick="changeImage(-1)">&#10094;</button>
-        <!-- Zmieniony kontener centralny - przyjmuje filmy i zdjęcia -->
-        <div id="lb-center-wrapper"></div>
-        <button class="lb-nav next" onclick="changeImage(1)">&#10095;</button>
-    </div>
+        let currentColumnIndex = 0;
+        let currentImageIndex = 0;
+        let galleryData = [];
+        let descCache = {};
+        let descLoadId = 0;
+        let localFileSystem = {};
 
-    <div class="lb-footer" id="lb-desc"></div>
-</div>
-
-<script>
-// ═══════════════════════════════════════════════
-//               K O N F I G U R A C J A
-// ═══════════════════════════════════════════════
-// window.location.hash = "it,3d,electro,cnc";
-// window.location.replace("https://mickurepo.github.io/gallery/#it,3d,electro,cnc");
-// const IS_LOCAL = window.location.href.startsWith('file:///');
-const DEFAULT_FOLDERS = ['it', '3d', 'electro', 'cnc'];
-const CONFIG = {
-    // useLocalMock : false, // TRUE dla testów na dysku, FALSE dla GitHuba
-    useLocalMock: window.location.href.startsWith('file:///'),
-    githubUser : 'mickurepo',   
-    githubRepo : 'gallery',      
-    branch     : 'dev',           
-    basePath   : 'images'                
-};
-// ═══════════════════════════════════════════════
-
-// Rozszerzenia mediów i wideo
-const MEDIA_EXT = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'webm', 'ogg', 'mov']);
-const VIDEO_EXT = new Set(['mp4', 'webm', 'ogg', 'mov']);
-
-let currentColumnIndex = 0;
-let currentImageIndex = 0;
-let galleryData = [];
-let descCache = {};
-let descLoadId = 0;
-let localFileSystem = {};
-
-// Czyści wcześniej utworzone object URL-e (zapobiega wyciekom pamięci)
-let activeObjectURLs = [];
-function revokeAllObjectURLs() {
-    activeObjectURLs.forEach(url => URL.revokeObjectURL(url));
-    activeObjectURLs = [];
-}
-
-function createObjectURL(file) {
-    const url = URL.createObjectURL(file);
-    activeObjectURLs.push(url);
-    return url;
-}
-
-function getFolders() {
-    const hash = window.location.hash.slice(1);
-    if (!hash) return DEFAULT_FOLDERS;
-    return hash.split(',').map(f => decodeURIComponent(f.trim())).filter(Boolean);
-}
-
-// ─── Lokalny picker z dysku ───
-document.getElementById('dir-picker').addEventListener('change', (e) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    // Czyści poprzednie dane
-    revokeAllObjectURLs();
-    localFileSystem = {};
-
-    for (const file of files) {
-        const relativePath = file.webkitRelativePath;
-        if (!relativePath) continue;
-
-        const parts = relativePath.split('/');
-        // webkitRelativePath: "WybranyFolder/plik.png"
-        //                     "WybranyFolder/Subfolder/plik.png"
-        // Nas interesuje OSTATNI folder przed plikiem jako klucz
-        // oraz root folder (parts[0]) jako ewentualny klucz
-
-        if (parts.length < 2) continue;
-
-        // Folder bezpośrednio zawierający plik
-        const parentFolder = parts[parts.length - 2];
-        const fileName = file.name;
-        const dotIndex = fileName.lastIndexOf('.');
-
-        if (dotIndex === -1) continue; // brak rozszerzenia - pomijamy
-
-        const ext = fileName.substring(dotIndex + 1).toLowerCase();
-        const baseName = fileName.substring(0, dotIndex).toLowerCase();
-
-        if (!localFileSystem[parentFolder]) {
-            localFileSystem[parentFolder] = { mediaFiles: [], txtFiles: {} };
+        // Czyści wcześniej utworzone object URL-e (zapobiega wyciekom pamięci)
+        let activeObjectURLs = [];
+        function revokeAllObjectURLs() {
+            activeObjectURLs.forEach(url => URL.revokeObjectURL(url));
+            activeObjectURLs = [];
         }
 
-        if (MEDIA_EXT.has(ext)) {
-            localFileSystem[parentFolder].mediaFiles.push({
-                file: file,
-                name: fileName,
-                isVideo: VIDEO_EXT.has(ext)
-            });
-        } else if (ext === 'txt') {
-            localFileSystem[parentFolder].txtFiles[baseName] = file;
-        }
-    }
-
-    // Sortuj media w każdym folderze od razu po załadowaniu
-    for (const folder of Object.keys(localFileSystem)) {
-        localFileSystem[folder].mediaFiles.sort((a, b) =>
-            a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })
-        );
-    }
-
-    console.log('Załadowane foldery:', Object.keys(localFileSystem));
-    console.log('Zawartość:', Object.fromEntries(
-        Object.entries(localFileSystem).map(([k, v]) => [
-            k,
-            { media: v.mediaFiles.length, txts: Object.keys(v.txtFiles).length }
-        ])
-    ));
-
-    render();
-});
-
-// ─── Pobieranie danych folderu ───
-async function fetchFolderData(folder) {
-
-    // === TRYB LOKALNY ===
-    if (CONFIG.useLocalMock) {
-        const folderData = localFileSystem[folder];
-        if (!folderData) {
-            console.warn(`Dostępne foldery:`, Object.keys(localFileSystem));
-            throw new Error(`Brak folderu "${folder}". Dostępne: ${Object.keys(localFileSystem).join(', ')}`);
+        function createObjectURL(file) {
+            const url = URL.createObjectURL(file);
+            activeObjectURLs.push(url);
+            return url;
         }
 
-        // mediaFiles już posortowane przy ładowaniu
-        return folderData.mediaFiles.map(item => {
-            const dotIndex = item.name.lastIndexOf('.');
-            const baseName = item.name.substring(0, dotIndex).toLowerCase();
-            const txtFile = folderData.txtFiles[baseName] || null;
+        function getFolders() {
+            const hash = window.location.hash.slice(1);
+            if (!hash) return DEFAULT_FOLDERS;
+            return hash.split(',').map(f => decodeURIComponent(f.trim())).filter(Boolean);
+        }
 
-            return {
-                src: createObjectURL(item.file),
-                txtUrl: txtFile ? createObjectURL(txtFile) : null,
-                isVideo: item.isVideo,
-                name: item.name // przydatne do debugowania
-            };
+        // ─── Lokalny picker z dysku ───
+        document.getElementById('dir-picker').addEventListener('change', (e) => {
+            const files = e.target.files;
+            if (!files || files.length === 0) return;
+
+            // Czyści poprzednie dane
+            revokeAllObjectURLs();
+            localFileSystem = {};
+
+            for (const file of files) {
+                const relativePath = file.webkitRelativePath;
+                if (!relativePath) continue;
+
+                const parts = relativePath.split('/');
+                // webkitRelativePath: "WybranyFolder/plik.png"
+                //                     "WybranyFolder/Subfolder/plik.png"
+                // Nas interesuje OSTATNI folder przed plikiem jako klucz
+                // oraz root folder (parts[0]) jako ewentualny klucz
+
+                if (parts.length < 2) continue;
+
+                // Folder bezpośrednio zawierający plik
+                const parentFolder = parts[parts.length - 2];
+                const fileName = file.name;
+                const dotIndex = fileName.lastIndexOf('.');
+
+                if (dotIndex === -1) continue; // brak rozszerzenia - pomijamy
+
+                const ext = fileName.substring(dotIndex + 1).toLowerCase();
+                const baseName = fileName.substring(0, dotIndex).toLowerCase();
+
+                if (!localFileSystem[parentFolder]) {
+                    localFileSystem[parentFolder] = { mediaFiles: [], txtFiles: {} };
+                }
+
+                if (MEDIA_EXT.has(ext)) {
+                    localFileSystem[parentFolder].mediaFiles.push({
+                        file: file,
+                        name: fileName,
+                        isVideo: VIDEO_EXT.has(ext)
+                    });
+                } else if (ext === 'txt') {
+                    localFileSystem[parentFolder].txtFiles[baseName] = file;
+                }
+            }
+
+            // Sortuj media w każdym folderze od razu po załadowaniu
+            for (const folder of Object.keys(localFileSystem)) {
+                localFileSystem[folder].mediaFiles.sort((a, b) =>
+                    a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })
+                );
+            }
+
+            console.log('Załadowane foldery:', Object.keys(localFileSystem));
+            console.log('Zawartość:', Object.fromEntries(
+                Object.entries(localFileSystem).map(([k, v]) => [
+                    k,
+                    { media: v.mediaFiles.length, txts: Object.keys(v.txtFiles).length }
+                ])
+            ));
+
+            render();
         });
-    }
 
-    // === TRYB GITHUB API ===
-    const path = CONFIG.basePath ? `${CONFIG.basePath}/${folder}` : folder;
-    const apiPath = path.split('/').map(encodeURIComponent).join('/');
-    const url = `https://api.github.com/repos/${CONFIG.githubUser}/${CONFIG.githubRepo}/contents/${apiPath}?ref=${CONFIG.branch}`;
+        // ─── Pobieranie danych folderu ───
+        async function fetchFolderData(folder) {
 
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`Brak folderu: ${folder} (HTTP ${res.status})`);
+            // === TRYB LOKALNY ===
+            if (CONFIG.useLocalMock) {
+                const folderData = localFileSystem[folder];
+                if (!folderData) {
+                    console.warn(`Dostępne foldery:`, Object.keys(localFileSystem));
+                    throw new Error(`Brak folderu "${folder}". Dostępne: ${Object.keys(localFileSystem).join(', ')}`);
+                }
 
-    const files = await res.json();
+                // mediaFiles już posortowane przy ładowaniu
+                return folderData.mediaFiles.map(item => {
+                    const dotIndex = item.name.lastIndexOf('.');
+                    const baseName = item.name.substring(0, dotIndex).toLowerCase();
+                    const txtFile = folderData.txtFiles[baseName] || null;
 
-    // Zbierz pliki .txt do mapy: baseName -> download_url
-    const txtFiles = {};
-    for (const f of files) {
-        const name = f.name;
-        if (name.toLowerCase().endsWith('.txt')) {
-            const baseName = name.substring(0, name.lastIndexOf('.')).toLowerCase();
-            txtFiles[baseName] = f.download_url;
+                    return {
+                        src: createObjectURL(item.file),
+                        txtUrl: txtFile ? createObjectURL(txtFile) : null,
+                        isVideo: item.isVideo,
+                        name: item.name // przydatne do debugowania
+                    };
+                });
+            }
+
+            // === TRYB GITHUB API ===
+            const path = CONFIG.basePath ? `${CONFIG.basePath}/${folder}` : folder;
+            const apiPath = path.split('/').map(encodeURIComponent).join('/');
+            const url = `https://api.github.com/repos/${CONFIG.githubUser}/${CONFIG.githubRepo}/contents/${apiPath}?ref=${CONFIG.branch}`;
+
+            const res = await fetch(url);
+            if (!res.ok) throw new Error(`Brak folderu: ${folder} (HTTP ${res.status})`);
+
+            const files = await res.json();
+
+            // Zbierz pliki .txt do mapy: baseName -> download_url
+            const txtFiles = {};
+            for (const f of files) {
+                const name = f.name;
+                if (name.toLowerCase().endsWith('.txt')) {
+                    const baseName = name.substring(0, name.lastIndexOf('.')).toLowerCase();
+                    txtFiles[baseName] = f.download_url;
+                }
+            }
+
+            // Filtruj media, sortuj, mapuj
+            return files
+                .filter(f => {
+                    if (f.type !== 'file') return false;
+                    const dotIndex = f.name.lastIndexOf('.');
+                    if (dotIndex === -1) return false;
+                    const ext = f.name.substring(dotIndex + 1).toLowerCase();
+                    return MEDIA_EXT.has(ext);
+                })
+                .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }))
+                .map(f => {
+                    const dotIndex = f.name.lastIndexOf('.');
+                    const ext = f.name.substring(dotIndex + 1).toLowerCase();
+                    const baseName = f.name.substring(0, dotIndex).toLowerCase();
+                    return {
+                        src: f.download_url,
+                        txtUrl: txtFiles[baseName] || null,
+                        isVideo: VIDEO_EXT.has(ext),
+                        name: f.name
+                    };
+                });
         }
-    }
 
-    // Filtruj media, sortuj, mapuj
-    return files
-        .filter(f => {
-            if (f.type !== 'file') return false;
-            const dotIndex = f.name.lastIndexOf('.');
-            if (dotIndex === -1) return false;
-            const ext = f.name.substring(dotIndex + 1).toLowerCase();
-            return MEDIA_EXT.has(ext);
-        })
-        .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }))
-        .map(f => {
-            const dotIndex = f.name.lastIndexOf('.');
-            const ext = f.name.substring(dotIndex + 1).toLowerCase();
-            const baseName = f.name.substring(0, dotIndex).toLowerCase();
-            return {
-                src: f.download_url,
-                txtUrl: txtFiles[baseName] || null,
-                isVideo: VIDEO_EXT.has(ext),
-                name: f.name
-            };
-        });
-}
+        async function render() {
+            const folders = getFolders();
+            const msgEl = document.getElementById('message');
+            const msgContent = document.getElementById('msg-content');
+            const msgSpinner = document.getElementById('msg-spinner');
+            const localPicker = document.getElementById('local-picker-container');
+            const galEl = document.getElementById('gallery');
 
-async function render() {
-    const folders = getFolders();
-    const msgEl = document.getElementById('message');
-    const msgContent = document.getElementById('msg-content');
-    const msgSpinner = document.getElementById('msg-spinner');
-    const localPicker = document.getElementById('local-picker-container');
-    const galEl = document.getElementById('gallery');
+            galEl.innerHTML = '';
+            galleryData = [];
 
-    galEl.innerHTML = '';
-    galleryData = [];
+            if (!folders.length) {
+                msgContent.style.display = 'block';
+                msgSpinner.style.display = 'none';
+                localPicker.style.display = 'none';
+                document.getElementById('msg-title').innerText = "Wpisz foldery w URL";
+                return;
+            }
 
-    if (!folders.length) {
-        msgContent.style.display = 'block';
-        msgSpinner.style.display = 'none';
-        localPicker.style.display = 'none';
-        document.getElementById('msg-title').innerText = "Wpisz foldery w URL";
-        return;
-    }
+            if (CONFIG.useLocalMock && Object.keys(localFileSystem).length === 0) {
+                msgContent.style.display = 'none';
+                msgSpinner.style.display = 'block';
+                localPicker.style.display = 'block';
+                document.getElementById('msg-title').innerText = "Odczyt z Dysku";
+                return;
+            }
 
-    if (CONFIG.useLocalMock && Object.keys(localFileSystem).length === 0) {
-        msgContent.style.display = 'none';
-        msgSpinner.style.display = 'block';
-        localPicker.style.display = 'block';
-        document.getElementById('msg-title').innerText = "Odczyt z Dysku";
-        return;
-    }
+            msgContent.style.display = 'none';
+            localPicker.style.display = 'none';
+            msgSpinner.style.display = 'block';
+            document.getElementById('msg-title').innerText = "📷 Galeria";
 
-    msgContent.style.display = 'none';
-    localPicker.style.display = 'none';
-    msgSpinner.style.display = 'block';
-    document.getElementById('msg-title').innerText = "📷 Galeria";
-
-    // ========== PROGRESSBAR - tworzenie ==========
-    let progressBar = document.getElementById('load-progress-bar');
-    if (!progressBar) {
-        const progressContainer = document.createElement('div');
-        progressContainer.id = 'load-progress-container';
-        progressContainer.innerHTML = `
+            // ========== PROGRESSBAR - tworzenie ==========
+            let progressBar = document.getElementById('load-progress-bar');
+            if (!progressBar) {
+                const progressContainer = document.createElement('div');
+                progressContainer.id = 'load-progress-container';
+                progressContainer.innerHTML = `
             <div id="load-progress-bar"></div>
             <div id="load-progress-text">0%</div>
         `;
-        msgSpinner.parentElement.appendChild(progressContainer);
-        progressBar = document.getElementById('load-progress-bar');
-    }
-    const progressText = document.getElementById('load-progress-text');
-    progressBar.style.width = '0%';
-    progressText.textContent = '0%';
+                msgSpinner.parentElement.appendChild(progressContainer);
+                progressBar = document.getElementById('load-progress-bar');
+            }
+            const progressText = document.getElementById('load-progress-text');
+            progressBar.style.width = '0%';
+            progressText.textContent = '0%';
 
-    const columns = folders.map(folder => {
-        const col = document.createElement('div');
-        col.className = 'column';
+            const columns = folders.map(folder => {
+                const col = document.createElement('div');
+                col.className = 'column';
 
-        const header = document.createElement('div');
-        header.className = 'column-header';
-        header.textContent = folder;
-        col.appendChild(header);
+                const header = document.createElement('div');
+                header.className = 'column-header';
+                header.textContent = folder;
+                col.appendChild(header);
 
-        galEl.appendChild(col);
-        return col;
-    });
+                galEl.appendChild(col);
+                return col;
+            });
 
-    // ========== Zbieranie WSZYSTKICH obietnic ==========
-    const allMediaPromises = [];
-    let totalMedia = 0;
-    let loadedMedia = 0;
+            // ========== Zbieranie WSZYSTKICH obietnic ==========
+            const allMediaPromises = [];
+            let totalMedia = 0;
+            let loadedMedia = 0;
 
-    function updateProgress() {
-        loadedMedia++;
-        const percent = Math.round((loadedMedia / totalMedia) * 100);
-        progressBar.style.width = percent + '%';
-        progressText.textContent = `${loadedMedia} / ${totalMedia} (${percent}%)`;
-    }
+            function updateProgress() {
+                loadedMedia++;
+                const percent = Math.round((loadedMedia / totalMedia) * 100);
+                progressBar.style.width = percent + '%';
+                progressText.textContent = `${loadedMedia} / ${totalMedia} (${percent}%)`;
+            }
 
-    for (let i = 0; i < folders.length; i++) {
-        const folder = folders[i];
-        try {
-            const mediaList = await fetchFolderData(folder);
-            galleryData.push({ folder, images: mediaList });
+            for (let i = 0; i < folders.length; i++) {
+                const folder = folders[i];
+                try {
+                    const mediaList = await fetchFolderData(folder);
+                    galleryData.push({ folder, images: mediaList });
 
-            // Najpierw zliczamy WSZYSTKIE media żeby progressbar wiedział ile jest łącznie
-            totalMedia += mediaList.length;
+                    // Najpierw zliczamy WSZYSTKIE media żeby progressbar wiedział ile jest łącznie
+                    totalMedia += mediaList.length;
 
-            mediaList.forEach((mediaItem, imgIndex) => {
-                const wrapper = document.createElement('div');
-                wrapper.className = 'img-wrapper';
-                wrapper.onclick = () => openLightbox(i, imgIndex);
+                    mediaList.forEach((mediaItem, imgIndex) => {
+                        const wrapper = document.createElement('div');
+                        wrapper.className = 'img-wrapper';
+                        wrapper.onclick = () => openLightbox(i, imgIndex);
 
-                let mediaEl;
+                        let mediaEl;
 
-                // ===== Tworzymy OBIETNICĘ dla każdego elementu =====
-                const loadPromise = new Promise((resolve) => {
-                    if (mediaItem.isVideo) {
-                        mediaEl = document.createElement('video');
-                        mediaEl.src = mediaItem.src;
-                        mediaEl.preload = 'auto';
-                        mediaEl.muted = true;
-                        mediaEl.onloadeddata = () => {
-                            mediaEl.classList.add('loaded');
-                            updateProgress();
-                            resolve();
-                        };
-                        mediaEl.onerror = () => {
-                            updateProgress();
-                            resolve(); // resolve nawet przy błędzie, żeby nie blokować
-                        };
-                    } else {
-                        mediaEl = document.createElement('img');
-                        mediaEl.src = mediaItem.src;
-                        mediaEl.loading = 'eager'; // ← WAŻNE: 'lazy' nie triggeruje onload dla niewidocznych!
-                        mediaEl.onload = () => {
-                            mediaEl.classList.add('loaded');
-                            updateProgress();
-                            resolve();
-                        };
-                        mediaEl.onerror = () => {
-                            updateProgress();
-                            resolve();
-                        };
-                    }
-                });
+                        // ===== Tworzymy OBIETNICĘ dla każdego elementu =====
+                        const loadPromise = new Promise((resolve) => {
+                            if (mediaItem.isVideo) {
+                                mediaEl = document.createElement('video');
+                                mediaEl.src = mediaItem.src;
+                                mediaEl.preload = 'auto';
+                                mediaEl.muted = true;
+                                mediaEl.onloadeddata = () => {
+                                    mediaEl.classList.add('loaded');
+                                    updateProgress();
+                                    resolve();
+                                };
+                                mediaEl.onerror = () => {
+                                    updateProgress();
+                                    resolve(); // resolve nawet przy błędzie, żeby nie blokować
+                                };
+                            } else {
+                                mediaEl = document.createElement('img');
+                                mediaEl.src = mediaItem.src;
+                                mediaEl.loading = 'eager'; // ← WAŻNE: 'lazy' nie triggeruje onload dla niewidocznych!
+                                mediaEl.onload = () => {
+                                    mediaEl.classList.add('loaded');
+                                    updateProgress();
+                                    resolve();
+                                };
+                                mediaEl.onerror = () => {
+                                    updateProgress();
+                                    resolve();
+                                };
+                            }
+                        });
 
-                allMediaPromises.push(loadPromise); // ← TO BRAKOWAŁO
+                        allMediaPromises.push(loadPromise); // ← TO BRAKOWAŁO
 
-                wrapper.appendChild(mediaEl);
+                        wrapper.appendChild(mediaEl);
 
-                if (mediaItem.isVideo) {
-                    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-                    svg.setAttribute("class", "play-icon");
-                    svg.setAttribute("viewBox", "0 0 24 24");
-                    svg.innerHTML = `
+                        if (mediaItem.isVideo) {
+                            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                            svg.setAttribute("class", "play-icon");
+                            svg.setAttribute("viewBox", "0 0 24 24");
+                            svg.innerHTML = `
                         <circle cx="12" cy="12" r="10" fill="#e63946" stroke="white" stroke-width="1"></circle>
                         <polygon points="10,8 16,12 10,16" fill="white"></polygon>
                     `;
-                    wrapper.appendChild(svg);
+                            wrapper.appendChild(svg);
+                        }
+
+                        columns[i].appendChild(wrapper);
+                    });
+                } catch (e) {
+                    columns[i].innerHTML += `<div style="text-align:center; padding: 20px; color:#ff6b6b">${e.message}</div>`;
+                    galleryData.push({ folder, images: [] });
+                }
+            }
+
+            // ========== Czekamy na WSZYSTKO, potem gasimy ekran ==========
+            if (allMediaPromises.length === 0) {
+                // Brak mediów — od razu chowamy
+                msgEl.style.display = 'none';
+                return;
+            }
+
+            // Timeout zabezpieczający — max 30s czekania
+            const timeout = new Promise(resolve => setTimeout(resolve, 30000));
+
+            await Promise.race([
+                Promise.all(allMediaPromises),
+                timeout
+            ]);
+
+            // Płynne zniknięcie
+            progressBar.style.width = '100%';
+            progressText.textContent = '100% ✓';
+
+            await new Promise(r => setTimeout(r, 500)); // chwila na zobaczenie 100%
+
+            msgEl.style.transition = 'opacity 0.6s ease';
+            msgEl.style.opacity = '0';
+
+            setTimeout(() => {
+                msgEl.style.display = 'none';
+            }, 600);
+        }
+
+        function createVideoThumbnail(mediaItem, wrapper, imgIndex, colIndex) {
+            const video = document.createElement('video');
+            video.src = mediaItem.src;
+            video.preload = 'metadata';
+            video.muted = true;
+            video.playsInline = true;
+            video.crossOrigin = 'anonymous';
+
+            let resolved = false;
+
+            function success() {
+                if (resolved) return;
+                resolved = true;
+
+                // Próba wygenerowania miniaturki na canvas → img
+                try {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = video.videoWidth || 320;
+                    canvas.height = video.videoHeight || 180;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                    // Sprawdź czy canvas nie jest pusty (czarny)
+                    const pixel = ctx.getImageData(0, 0, 1, 1).data;
+                    const isBlack = pixel[0] === 0 && pixel[1] === 0 && pixel[2] === 0;
+
+                    if (!isBlack) {
+                        // Canvas ma obraz - zamień video na img
+                        const img = document.createElement('img');
+                        img.src = canvas.toDataURL('image/jpeg', 0.7);
+                        img.classList.add('loaded');
+                        wrapper.replaceChild(img, wrapper.firstChild);
+                    } else {
+                        // Czarny obraz - zostaw video element
+                        video.classList.add('loaded');
+                    }
+                } catch (e) {
+                    // Canvas fail (CORS itp.) - zostaw video
+                    video.classList.add('loaded');
                 }
 
-                columns[i].appendChild(wrapper);
-            });
-        } catch (e) {
-            columns[i].innerHTML += `<div style="text-align:center; padding: 20px; color:#ff6b6b">${e.message}</div>`;
-            galleryData.push({ folder, images: [] });
-        }
-    }
-
-    // ========== Czekamy na WSZYSTKO, potem gasimy ekran ==========
-    if (allMediaPromises.length === 0) {
-        // Brak mediów — od razu chowamy
-        msgEl.style.display = 'none';
-        return;
-    }
-
-    // Timeout zabezpieczający — max 30s czekania
-    const timeout = new Promise(resolve => setTimeout(resolve, 30000));
-
-    await Promise.race([
-        Promise.all(allMediaPromises),
-        timeout
-    ]);
-
-    // Płynne zniknięcie
-    progressBar.style.width = '100%';
-    progressText.textContent = '100% ✓';
-
-    await new Promise(r => setTimeout(r, 500)); // chwila na zobaczenie 100%
-
-    msgEl.style.transition = 'opacity 0.6s ease';
-    msgEl.style.opacity = '0';
-
-    setTimeout(() => {
-        msgEl.style.display = 'none';
-    }, 600);
-}
-
-function createVideoThumbnail(mediaItem, wrapper, imgIndex, colIndex) {
-    const video = document.createElement('video');
-    video.src = mediaItem.src;
-    video.preload = 'metadata';
-    video.muted = true;
-    video.playsInline = true;
-    video.crossOrigin = 'anonymous';
-
-    let resolved = false;
-
-    function success() {
-        if (resolved) return;
-        resolved = true;
-
-        // Próba wygenerowania miniaturki na canvas → img
-        try {
-            const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth || 320;
-            canvas.height = video.videoHeight || 180;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            // Sprawdź czy canvas nie jest pusty (czarny)
-            const pixel = ctx.getImageData(0, 0, 1, 1).data;
-            const isBlack = pixel[0] === 0 && pixel[1] === 0 && pixel[2] === 0;
-
-            if (!isBlack) {
-                // Canvas ma obraz - zamień video na img
-                const img = document.createElement('img');
-                img.src = canvas.toDataURL('image/jpeg', 0.7);
-                img.classList.add('loaded');
-                wrapper.replaceChild(img, wrapper.firstChild);
-            } else {
-                // Czarny obraz - zostaw video element
-                video.classList.add('loaded');
+                // Zwolnij pamięć - video nie jest potrzebne jako element DOM
+                video.removeAttribute('src');
+                video.load();
             }
-        } catch (e) {
-            // Canvas fail (CORS itp.) - zostaw video
-            video.classList.add('loaded');
-        }
 
-        // Zwolnij pamięć - video nie jest potrzebne jako element DOM
-        video.removeAttribute('src');
-        video.load();
-    }
+            function fail() {
+                if (resolved) return;
+                resolved = true;
 
-    function fail() {
-        if (resolved) return;
-        resolved = true;
-
-        // Placeholder zamiast miniaturki
-        const placeholder = document.createElement('div');
-        placeholder.className = 'video-placeholder loaded';
-        placeholder.innerHTML = `
+                // Placeholder zamiast miniaturki
+                const placeholder = document.createElement('div');
+                placeholder.className = 'video-placeholder loaded';
+                placeholder.innerHTML = `
             <svg viewBox="0 0 24 24" width="48" height="48">
                 <rect x="2" y="4" width="20" height="16" rx="2" fill="none" stroke="#888" stroke-width="1.5"/>
                 <polygon points="10,8 16,12 10,16" fill="#888"/>
             </svg>
             <span>${mediaItem.name || 'Video'}</span>
         `;
-        wrapper.replaceChild(placeholder, wrapper.firstChild);
-    }
-
-    video.addEventListener('loadedmetadata', () => {
-        video.currentTime = Math.min(0.5, video.duration || 0.5);
-    });
-
-    video.addEventListener('seeked', success);
-    video.addEventListener('error', fail);
-
-    // Timeout - jeśli nic nie zadziała w 5s
-    setTimeout(fail, 5000);
-
-    wrapper.appendChild(video);
-}
-
-function generateVideoThumb(src) {
-    return new Promise((resolve) => {
-        const video = document.createElement('video');
-        video.preload = 'auto';
-        video.muted = true;
-        video.playsInline = true;
-        video.crossOrigin = 'anonymous';
-
-        const timeout = setTimeout(() => {
-            // Po 5s poddajemy się — zwracamy null
-            cleanup();
-            resolve(null);
-        }, 10000);
-
-        function cleanup() {
-            clearTimeout(timeout);
-            video.removeAttribute('src');
-            video.load();
-        }
-
-        video.onloadeddata = () => {
-            // Seek do 0.5s lub 10% filmu
-            video.currentTime = Math.min(0.5, video.duration * 0.1 || 0);
-        };
-
-        video.onseeked = () => {
-            try {
-                const canvas = document.createElement('canvas');
-                canvas.width = video.videoWidth || 320;
-                canvas.height = video.videoHeight || 240;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
-                cleanup();
-                resolve(dataUrl);
-            } catch (e) {
-                console.warn('Canvas capture failed:', src, e);
-                cleanup();
-                resolve(null);
+                wrapper.replaceChild(placeholder, wrapper.firstChild);
             }
-        };
 
-        video.onerror = () => {
-            console.warn('Video decode error:', src);
-            cleanup();
-            resolve(null);
-        };
+            video.addEventListener('loadedmetadata', () => {
+                video.currentTime = Math.min(0.5, video.duration || 0.5);
+            });
 
-        video.src = src;
-    });
-}
+            video.addEventListener('seeked', success);
+            video.addEventListener('error', fail);
 
-/* ---------- LIGHTBOX ---------- */
-const lbEl = document.getElementById('lightbox');
-const lbCenterWrapper = document.getElementById('lb-center-wrapper');
-const lbFolder = document.getElementById('lb-folder');
-const lbCounter = document.getElementById('lb-counter');
-const lbDesc = document.getElementById('lb-desc');
-const lbBody = document.getElementById('lb-body');
+            // Timeout - jeśli nic nie zadziała w 5s
+            setTimeout(fail, 5000);
 
-// Pomocnicza funkcja tworząca element do Lightboxa
-function createMediaElement(src, isVideo) {
-    let el;
-    if (isVideo) {
-        el = document.createElement('video');
-        el.src = src;
-        el.controls = true;
-        el.autoplay = true;
-    } else {
-        el = document.createElement('img');
-        el.src = src;
-    }
-    el.className = 'lb-media';
-    return el;
-}
-
-async function openLightbox(colIndex, imgIndex) {
-    currentColumnIndex = colIndex;
-    currentImageIndex = imgIndex;
-    lbEl.classList.add('open');
-    updateLightboxUI('none');
-}
-
-function closeLightbox() {
-    lbEl.classList.remove('open');
-    // Pauza wideo przed zamknięciem
-    if (lbCenterWrapper.firstElementChild && lbCenterWrapper.firstElementChild.tagName === 'VIDEO') {
-        lbCenterWrapper.firstElementChild.pause();
-    }
-    lbCenterWrapper.innerHTML = ''; 
-    document.querySelectorAll('.lb-clone').forEach(el => el.remove());
-}
-
-function changeImage(direction) {
-    const colData = galleryData[currentColumnIndex];
-    if (colData.images.length === 0) return;
-
-    let newIndex = currentImageIndex + direction;
-    if (newIndex < 0) newIndex = colData.images.length - 1;
-    if (newIndex >= colData.images.length) newIndex = 0;
-
-    currentImageIndex = newIndex;
-    updateLightboxUI(direction > 0 ? 'right' : 'left');
-}
-
-async function updateLightboxUI(direction) {
-    const colData = galleryData[currentColumnIndex];
-    const mediaData = colData.images[currentImageIndex];
-
-    lbFolder.textContent = colData.folder;
-    lbCounter.textContent = `${currentImageIndex + 1} / ${colData.images.length}`;
-
-    const oldMedia = lbCenterWrapper.firstElementChild;
-
-    if (direction !== 'none' && oldMedia) {
-        // Czyścimy trwające animacje jeśli gracz "spami" przyciski
-        document.querySelectorAll('.lb-clone').forEach(el => el.remove());
-
-        // 1. STARE MEDIA -> Odjeżdża z tyłu (Z-index: 20)
-        const oldClone = oldMedia.cloneNode(true);
-        oldClone.className = 'lb-clone';
-        if (oldClone.tagName === 'VIDEO') {
-            oldMedia.pause(); // Stop dźwięku w oryginale
-            oldClone.muted = true; // Klon też niemy
-            oldClone.removeAttribute('controls');
+            wrapper.appendChild(video);
         }
-        lbBody.appendChild(oldClone);
 
-        // 2. NOWE MEDIA GŁÓWNE -> Pojawia się natychmiast na wierzchu (Z-index: 40)
-        const newMedia = createMediaElement(mediaData.src, mediaData.isVideo);
-        lbCenterWrapper.innerHTML = ''; 
-        lbCenterWrapper.appendChild(newMedia); // Jest już na miejscu gotowe do oglądania
+        function generateVideoThumb(src) {
+            return new Promise((resolve) => {
+                const video = document.createElement('video');
+                video.preload = 'auto';
+                video.muted = true;
+                video.playsInline = true;
+                video.crossOrigin = 'anonymous';
 
-        // 3. NOWE MEDIA KLON -> "Duch" nadlatujący z tyłu jako pęd (Z-index: 20)
-        const newClone = newMedia.cloneNode(true);
-        newClone.className = 'lb-clone';
-        if (newClone.tagName === 'VIDEO') {
-            newClone.muted = true; // Duch w tle jest bez dźwięku
-            newClone.removeAttribute('controls');
-        }
-        
-        // Ustawienie początkowej pozycji ducha za krawędzią ekranu
-        if (direction === 'right') {
-            newClone.style.transform = 'translateX(100vw) scale(0.6)';
-        } else {
-            newClone.style.transform = 'translateX(-100vw) scale(0.6)';
-        }
-        lbBody.appendChild(newClone);
+                const timeout = setTimeout(() => {
+                    // Po 5s poddajemy się — zwracamy null
+                    cleanup();
+                    resolve(null);
+                }, 10000);
 
-        // Przebudowanie DOM-u by aktywować animację CSS
-        void lbBody.offsetWidth;
-
-        // 4. ANIMACJA 
-        if (direction === 'right') {
-            oldClone.style.transform = 'translateX(-100vw) scale(0.6)';
-        } else {
-            oldClone.style.transform = 'translateX(100vw) scale(0.6)';
-        }
-        oldClone.style.opacity = '0';
-        
-        // Duch wjeżdża "za plecami" prawdziwego zdjęcia, by ostatecznie się z nim zrównać i schować
-        newClone.style.transform = 'translateX(0) scale(1)';
-
-        // Sprzątanie po 300 milisekundach (gdy zakończy się pęd)
-        setTimeout(() => {
-            if(oldClone.parentNode) oldClone.remove();
-            if(newClone.parentNode) newClone.remove();
-        }, 1000);
-
-    } else {
-        // Uruchomienie pierwsze (otwarcie po kliknięciu miniatury)
-        lbCenterWrapper.innerHTML = '';
-        lbCenterWrapper.appendChild(createMediaElement(mediaData.src, mediaData.isVideo));
-    }
-
-    // --- Pobieranie opisów plików ---
-    const currentReqId = ++descLoadId;
-    lbDesc.innerHTML = '';
-
-    if (mediaData.txtUrl) {
-        if (descCache[mediaData.txtUrl]) {
-            lbDesc.innerHTML = descCache[mediaData.txtUrl];
-        } else {
-            lbDesc.innerHTML = '<span class="lb-desc-loading">...</span>';
-            try {
-                const response = await fetch(mediaData.txtUrl);
-                const text = await response.text();
-                
-                if (currentReqId !== descLoadId) return; 
-
-                const formattedText = text.replace(/\n/g, '<br>'); 
-                descCache[mediaData.txtUrl] = formattedText;
-                lbDesc.innerHTML = formattedText;
-            } catch (e) {
-                if (currentReqId === descLoadId) {
-                    lbDesc.innerHTML = '<span style="color:#ff6b6b">Błąd wczytywania opisu. Upewnij się, że opisy mają to samo rozszerzenie .txt</span>';
+                function cleanup() {
+                    clearTimeout(timeout);
+                    video.removeAttribute('src');
+                    video.load();
                 }
+
+                video.onloadeddata = () => {
+                    // Seek do 0.5s lub 10% filmu
+                    video.currentTime = Math.min(0.5, video.duration * 0.1 || 0);
+                };
+
+                video.onseeked = () => {
+                    try {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = video.videoWidth || 320;
+                        canvas.height = video.videoHeight || 240;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                        cleanup();
+                        resolve(dataUrl);
+                    } catch (e) {
+                        console.warn('Canvas capture failed:', src, e);
+                        cleanup();
+                        resolve(null);
+                    }
+                };
+
+                video.onerror = () => {
+                    console.warn('Video decode error:', src);
+                    cleanup();
+                    resolve(null);
+                };
+
+                video.src = src;
+            });
+        }
+
+        /* ---------- LIGHTBOX ---------- */
+        const lbEl = document.getElementById('lightbox');
+        const lbCenterWrapper = document.getElementById('lb-center-wrapper');
+        const lbFolder = document.getElementById('lb-folder');
+        const lbCounter = document.getElementById('lb-counter');
+        const lbDesc = document.getElementById('lb-desc');
+        const lbBody = document.getElementById('lb-body');
+
+        // Pomocnicza funkcja tworząca element do Lightboxa
+        function createMediaElement(src, isVideo) {
+            let el;
+            if (isVideo) {
+                el = document.createElement('video');
+                el.src = src;
+                el.controls = true;
+                el.autoplay = true;
+            } else {
+                el = document.createElement('img');
+                el.src = src;
+            }
+            el.className = 'lb-media';
+            return el;
+        }
+
+        async function openLightbox(colIndex, imgIndex) {
+            currentColumnIndex = colIndex;
+            currentImageIndex = imgIndex;
+            lbEl.classList.add('open');
+            updateLightboxUI('none');
+        }
+
+        function closeLightbox() {
+            lbEl.classList.remove('open');
+            // Pauza wideo przed zamknięciem
+            if (lbCenterWrapper.firstElementChild && lbCenterWrapper.firstElementChild.tagName === 'VIDEO') {
+                lbCenterWrapper.firstElementChild.pause();
+            }
+            lbCenterWrapper.innerHTML = '';
+            document.querySelectorAll('.lb-clone').forEach(el => el.remove());
+        }
+
+        function changeImage(direction) {
+            const colData = galleryData[currentColumnIndex];
+            if (colData.images.length === 0) return;
+
+            let newIndex = currentImageIndex + direction;
+            if (newIndex < 0) newIndex = colData.images.length - 1;
+            if (newIndex >= colData.images.length) newIndex = 0;
+
+            currentImageIndex = newIndex;
+            updateLightboxUI(direction > 0 ? 'right' : 'left');
+        }
+
+        async function updateLightboxUI(direction) {
+            const colData = galleryData[currentColumnIndex];
+            const mediaData = colData.images[currentImageIndex];
+
+            lbFolder.textContent = colData.folder;
+            lbCounter.textContent = `${currentImageIndex + 1} / ${colData.images.length}`;
+
+            const oldMedia = lbCenterWrapper.firstElementChild;
+
+            if (direction !== 'none' && oldMedia) {
+                // Czyścimy trwające animacje jeśli gracz "spami" przyciski
+                document.querySelectorAll('.lb-clone').forEach(el => el.remove());
+
+                // 1. STARE MEDIA -> Odjeżdża z tyłu (Z-index: 20)
+                const oldClone = oldMedia.cloneNode(true);
+                oldClone.className = 'lb-clone';
+                if (oldClone.tagName === 'VIDEO') {
+                    oldMedia.pause(); // Stop dźwięku w oryginale
+                    oldClone.muted = true; // Klon też niemy
+                    oldClone.removeAttribute('controls');
+                }
+                lbBody.appendChild(oldClone);
+
+                // 2. NOWE MEDIA GŁÓWNE -> Pojawia się natychmiast na wierzchu (Z-index: 40)
+                const newMedia = createMediaElement(mediaData.src, mediaData.isVideo);
+                lbCenterWrapper.innerHTML = '';
+                lbCenterWrapper.appendChild(newMedia); // Jest już na miejscu gotowe do oglądania
+
+                // 3. NOWE MEDIA KLON -> "Duch" nadlatujący z tyłu jako pęd (Z-index: 20)
+                const newClone = newMedia.cloneNode(true);
+                newClone.className = 'lb-clone';
+                if (newClone.tagName === 'VIDEO') {
+                    newClone.muted = true; // Duch w tle jest bez dźwięku
+                    newClone.removeAttribute('controls');
+                }
+
+                // Ustawienie początkowej pozycji ducha za krawędzią ekranu
+                if (direction === 'right') {
+                    newClone.style.transform = 'translateX(100vw) scale(0.6)';
+                } else {
+                    newClone.style.transform = 'translateX(-100vw) scale(0.6)';
+                }
+                lbBody.appendChild(newClone);
+
+                // Przebudowanie DOM-u by aktywować animację CSS
+                void lbBody.offsetWidth;
+
+                // 4. ANIMACJA 
+                if (direction === 'right') {
+                    oldClone.style.transform = 'translateX(-100vw) scale(0.6)';
+                } else {
+                    oldClone.style.transform = 'translateX(100vw) scale(0.6)';
+                }
+                oldClone.style.opacity = '0';
+
+                // Duch wjeżdża "za plecami" prawdziwego zdjęcia, by ostatecznie się z nim zrównać i schować
+                newClone.style.transform = 'translateX(0) scale(1)';
+
+                // Sprzątanie po 300 milisekundach (gdy zakończy się pęd)
+                setTimeout(() => {
+                    if (oldClone.parentNode) oldClone.remove();
+                    if (newClone.parentNode) newClone.remove();
+                }, 1000);
+
+            } else {
+                // Uruchomienie pierwsze (otwarcie po kliknięciu miniatury)
+                lbCenterWrapper.innerHTML = '';
+                lbCenterWrapper.appendChild(createMediaElement(mediaData.src, mediaData.isVideo));
+            }
+
+            // --- Pobieranie opisów plików ---
+            const currentReqId = ++descLoadId;
+            lbDesc.innerHTML = '';
+
+            if (mediaData.txtUrl) {
+                if (descCache[mediaData.txtUrl]) {
+                    lbDesc.innerHTML = descCache[mediaData.txtUrl];
+                } else {
+                    lbDesc.innerHTML = '<span class="lb-desc-loading">...</span>';
+                    try {
+                        const response = await fetch(mediaData.txtUrl);
+                        const text = await response.text();
+
+                        if (currentReqId !== descLoadId) return;
+
+                        const formattedText = text.replace(/\n/g, '<br>');
+                        descCache[mediaData.txtUrl] = formattedText;
+                        lbDesc.innerHTML = formattedText;
+                    } catch (e) {
+                        if (currentReqId === descLoadId) {
+                            lbDesc.innerHTML = '<span style="color:#ff6b6b">Błąd wczytywania opisu. Upewnij się, że opisy mają to samo rozszerzenie .txt</span>';
+                        }
+                    }
+                }
+            } else {
+                lbDesc.innerHTML = '<span style="color:#555; font-style:italic">Brak opisu (stwórz plik .txt o tej samej nazwie).</span>';
             }
         }
-    } else {
-        lbDesc.innerHTML = '<span style="color:#555; font-style:italic">Brak opisu (stwórz plik .txt o tej samej nazwie).</span>';
-    }
-}
 
-// Obsługa dotykowa dla telefonów
-let touchStartX = 0;
-lbBody.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; });
-lbBody.addEventListener('touchend', e => {
-    let touchEndX = e.changedTouches[0].screenX;
-    if (touchStartX - touchEndX > 40) changeImage(1);
-    if (touchEndX - touchStartX > 40) changeImage(-1);
-});
+        // Obsługa dotykowa dla telefonów
+        let touchStartX = 0;
+        lbBody.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; });
+        lbBody.addEventListener('touchend', e => {
+            let touchEndX = e.changedTouches[0].screenX;
+            if (touchStartX - touchEndX > 40) changeImage(1);
+            if (touchEndX - touchStartX > 40) changeImage(-1);
+        });
 
-// Zapobieganie przesuwaniu strony strzałkami
-document.addEventListener('keydown', e => {
-    if (!lbEl.classList.contains('open')) return;
-    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft' || e.key === 'Escape') { e.preventDefault(); }
-    if (e.key === 'Escape') closeLightbox();
-    if (e.key === 'ArrowRight') changeImage(1);
-    if (e.key === 'ArrowLeft') changeImage(-1);
-});
+        // Zapobieganie przesuwaniu strony strzałkami
+        document.addEventListener('keydown', e => {
+            if (!lbEl.classList.contains('open')) return;
+            if (e.key === 'ArrowRight' || e.key === 'ArrowLeft' || e.key === 'Escape') { e.preventDefault(); }
+            if (e.key === 'Escape') closeLightbox();
+            if (e.key === 'ArrowRight') changeImage(1);
+            if (e.key === 'ArrowLeft') changeImage(-1);
+        });
 
-window.addEventListener('hashchange', render);
-render();
-</script>
+        window.addEventListener('hashchange', render);
+        render();
+    </script>
 </body>
+
 </html>
