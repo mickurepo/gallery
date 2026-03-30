@@ -1,0 +1,1 @@
+Program do konwersji plików video. Konwersja + redukcja rozmiaru pliku przed uploadem na serwer. Napisany w Python, 2026

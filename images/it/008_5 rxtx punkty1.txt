@@ -1,0 +1,1 @@
+Autorski program do sterowania maszyną CNC. Generator GCode. Program CAD/CAM i sterownik jednocześnie. 2021. Java i C/Arduino. Osobny program do generowania punktów z bitmapy napisany w Borland C++

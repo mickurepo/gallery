@@ -1,0 +1,1 @@
+Program napisany w języku Rust. 2026. Minimalistyczny edytor tekstu. Numery linii, zakładki, edycja metadanych

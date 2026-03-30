@@ -1,0 +1,1 @@
+Lokalny model AI. "ChatGPT" offline. Główne zastosowanie do zarządzania poufnymi danymi (dane osobowe, ważne części kodu itd...). AI wymaga ogromnej mocy obliczeniowej. Dzięki integracji z intel_extension_for_pytorch wykorzystywana jest karta graficzna (w moim przypadku jest to Intel Arc)

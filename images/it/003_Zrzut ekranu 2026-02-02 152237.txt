@@ -1,0 +1,1 @@
+Aplikacja mapy offline, OpenStreetMap (geofabrik.de). Wersja na PC. Aplikacja w fazie rozwoju

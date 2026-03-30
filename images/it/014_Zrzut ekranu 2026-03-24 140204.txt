@@ -1,0 +1,1 @@
+Program napisany w Pythonie. 2026. Minimalistyczny edytor tekstu.

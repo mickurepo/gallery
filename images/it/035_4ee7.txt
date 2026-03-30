@@ -1,0 +1,1 @@
+Stary projekt, strona internetowa z backendem JavaEE. HTML, CSS, JavaScript, JQuery. Stworzona w 2017

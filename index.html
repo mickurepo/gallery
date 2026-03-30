@@ -49,7 +49,7 @@
             /*border-radius: 8px;*/
             backdrop-filter: blur(5px);
             position: sticky;
-            top: 15px;
+            top: 0px;
             z-index: 10;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
@@ -127,7 +127,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px 25px;
+            padding: 10px 25px;
             background: rgba(0, 0, 0, 0.5);
             font-size: 1.2em;
             z-index: 60;
@@ -207,9 +207,9 @@
 
         .lb-media {
             max-width: 85vw;
-            max-height: 90vh;
+            max-height: 85vh;
             object-fit: contain;
-            border-radius: 1px;
+            border-radius: 4px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
         }
 
@@ -312,7 +312,7 @@
             }
 
             50% {
-                text-shadow: 0 0 25px rgba(255, 255, 255, 0.8);
+                text-shadow: 0 0 30px rgba(255, 255, 255, 0.9);
                 transform: scale(1.02);
             }
 
@@ -356,68 +356,89 @@
             position: absolute;
             left: 30vw;
             top: 85vh;
+        }
 
 
-            /* Animacja obrotu */
-            @keyframes spin {
-                0% {
-                    transform: rotate(0deg);
-                }
-
-                100% {
-                    transform: rotate(360deg);
-                }
+        /* Animacja obrotu */
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
             }
 
+            100% {
+                transform: rotate(360deg);
+            }
+        }
 
 
-            #load-progress-container {
-                width: 80%;
-                max-width: 400px;
-                margin: 20px auto 0;
-                text-align: center;
-                background: rgba(255, 255, 255, 0.1);
-                border-radius: 12px;
-                overflow: hidden;
-                position: relative;
-                height: 24px;
+
+        #load-progress-container {
+            width: 80%;
+            max-width: 400px;
+            margin: 20px auto 0;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            height: 24px;
+        }
+
+        #load-progress-bar {
+            height: 100%;
+            width: 0%;
+            /* background: linear-gradient(90deg, #116b2c, #8ee4dd, #b3b3b3); */
+            background: linear-gradient(90deg, #1e3436, #5f8b7d, #b1b393);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 12px;
+            transition: width 0.3s ease;
+        }
+
+        #load-progress-text {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+            pointer-events: none;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 200% 0;
             }
 
-            #load-progress-bar {
-                height: 100%;
-                width: 0%;
-                background: linear-gradient(90deg, #e63946, #ff6b6b, #e63946);
-                background-size: 200% 100%;
-                animation: shimmer 1.5s infinite;
-                border-radius: 12px;
-                transition: width 0.3s ease;
+            100% {
+                background-position: -200% 0;
             }
+        }
 
-            #load-progress-text {
-                position: absolute;
-                top: 0;
-                left: 0;
-                right: 0;
-                height: 100%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 12px;
-                font-weight: 600;
-                color: white;
-                text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-                pointer-events: none;
-            }
+        video::-webkit-media-controls-enclosure {
+            display: flex !important;
+        }
 
-            @keyframes shimmer {
-                0% {
-                    background-position: 200% 0;
-                }
+        video::-webkit-media-controls-panel {
+            display: flex !important;
+            opacity: 1 !important;
+        }
 
-                100% {
-                    background-position: -200% 0;
-                }
-            }
+        #remastered {
+            top: 94vh;
+            left: 94vw;
+            position: absolute;
+            font-size: 1rem;
+            color: #cacaac;
+            font-style: italic;
+            font-family: initial;
+        }
     </style>
 </head>
 
@@ -455,8 +476,14 @@
         <div id="spinnerAndProgressbar">
             <div id="msg-spinner" class="spinner"></div>
         </div>
+
+        <div class="pulse-text" id="remastered">
+            remastered 2026
+        </div>
     </div>
 
+    <div style="position: absolute;/*! background: green; */width: 100%;height: 67px;"><img src="images/header.png"
+            style="width: 100%;height: 100%;"></div>
     <div id="gallery"></div>
 
     <!-- LIGHTBOX -->
@@ -1102,12 +1129,13 @@
                         lbDesc.innerHTML = formattedText;
                     } catch (e) {
                         if (currentReqId === descLoadId) {
-                            lbDesc.innerHTML = '<span style="color:#ff6b6b">Błąd wczytywania opisu. Upewnij się, że opisy mają to samo rozszerzenie .txt</span>';
+                            // lbDesc.innerHTML = '<span style="color:#ff6b6b">Błąd wczytywania opisu. Upewnij się, że opisy mają to samo rozszerzenie .txt</span>';
                         }
                     }
                 }
             } else {
-                lbDesc.innerHTML = '<span style="color:#555; font-style:italic">Brak opisu (stwórz plik .txt o tej samej nazwie).</span>';
+                lbDesc.innerHTML = '';
+                // lbDesc.innerHTML = '<span style="color:#555; font-style:italic">Brak opisu (stwórz plik .txt o tej samej nazwie).</span>';
             }
         }
 

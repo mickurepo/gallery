@@ -1,0 +1,1 @@
+Mapy offline, emulator Android. QGIS. Java, Python, WSL (linux) - do stworzenia bazy danych z pliku .pbf (OSM). Baza danych PostgreSQL, PostGIS, SQL
